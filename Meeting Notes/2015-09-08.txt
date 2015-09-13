@@ -1,0 +1,50 @@
+TODO for Meeting 9/8/15
+--------------------------------
+Determine which parts of the Project Management Plan and Concept of Operations each person will do.
+
+
+Project Management Plan
+-----------------------------
+Shared
+	- Deliverables
+
+Robin
+	- Project Overview
+	- Applicable Standards
+	- Software Life Cycle Process
+	- Configuration Management
+        
+Jimmy
+	- Project Team Organization
+	- Plan for tracking, control, and reporting of progress
+	- Technical Progress Metrics
+
+Julian
+	- Tools and Computing Environment
+	- Risk Management
+	- Project Team Organization
+
+Manuel
+	- QA
+	- PERT Chart
+	- Table of Work Packages
+
+
+Concept of Operations
+-----------------------------
+
+Robin
+	- The Current System
+    
+Jimmy
+	- The Proposed System: Needs
+	- The Proposed System: Expected Impacts
+
+Julian
+	- The Proposed System: Operational Features
+	- The Proposed System: Operational Scenarios
+
+Manuel
+	- The Proposed System: Users and Modes of Operation
+	- The Proposed System: Analysis
+
