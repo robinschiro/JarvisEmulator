@@ -1,0 +1,33 @@
+We need people to handle:
+    1) Input from camera and algorithm for facial recognition
+		- Track people's heads, watch their mouths to determine who is talking. Direct questions/responses to that person
+    2) Perform speech construction		
+	3) Perform speech recogition
+	4) Primary Action Module: Receive information from websites relevant to user (configured by user)
+		- Report information from websites that the user cares about
+		- Research website APIs
+		- Be sure to include weather related information
+	5) Other Action Modules
+		- Open and close applications
+		- Logging in and out
+        - Take picture of face
+	6) User Interface
+		- Have something visual occur when the software talks to the user.
+		- Create GUI to allow user to configure application and profiles.
+	7) *Everyone* will be responsible for documentation
+	
+	
+Member Responsiblities:
+	- Robin: (1), (6)
+	- Jimmy: (3), (5)
+	- Manuel: (2) 
+	- Julian: (4), (1) (submodule that figures out who's talking)
+
+Design:
+- Central class that processes inputs and routes message to appropriate module
+
+Stretch Goals:
+- Have animated face talk to user.
+- Recognizing emotions
+
+
