@@ -9,7 +9,7 @@ We need people to handle:
 		- Be sure to include weather related information
 	5) Other Action Modules
 		- Open and close applications
-		- Logging in and out
+		- Logs out
         - Take picture of face
 	6) User Interface
 		- Have something visual occur when the software talks to the user.
