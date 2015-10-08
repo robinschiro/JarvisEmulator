@@ -1,0 +1,8 @@
+Meeting Notes 10/5/15
+-------------------------------
+
+Robin - Add demo project to supporting materials of SRS
+Jimmy - Put 'Normal user" stakeholder
+Robin - Put new use case diagram in SRS
+Review reqs to see if can put links to supporting materials
+Robin - Put documents on Google Docs

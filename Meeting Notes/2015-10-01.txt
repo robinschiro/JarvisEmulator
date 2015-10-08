@@ -1,0 +1,44 @@
+Meeting Notes 10/1/2015
+------------------------
+TODO:
+- Determine how we will divide the workload for the SRS and Test Plan.
+- Discuss how we want to proceed with design
+--------------------------------------------------------------------------
+
+PUT IN EMAIL:
+We are going to split up all work for SRS and Test Plan excluding Section 2 of SRS. We will all finish our assigned parts by Monday. Monday night at 6 PM at UCF Library, we will meet to finish Section 2 as well as to flesh out the Interface Requirements of Section 3.
+
+-------------------------------------------------------------------------------
+
+SRS:
+- Each person writes events for his module (Section 2)
+- Each person writes functional requirements for his module (Section 3: 3.1)
+
+Test Plan:
+- Each person writes test cases for his module (Section 4)
+
+Remaining Work:
+
+Jimmy
+{
+    SRS Section 1: Introduction
+    SRS Section 2: Assumptions and Stakeholders
+        - After whole group creates event table + use case diagram together, this person will clean up the information to make it presentable.
+}
+
+Julian
+{
+    SRS Section 3:
+        - 3.3, 3.4, 3.5, 3.6
+}
+
+Manuel
+{
+    SRS Section 3:
+        - 3.7, 3.8, 3.9
+}
+
+Robin
+{
+    Test Plan Sections 1, 2, and 3
+}
