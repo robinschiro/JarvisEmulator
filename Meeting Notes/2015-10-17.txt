@@ -1,0 +1,17 @@
+Meeting Notes 10/17/15
+------------------------------------
+TODO: Divide work for Deliverable 3
+------------------------------------
+
+- Need to meet to create UML diagrams (class diagrams, activity graphs, etc.)
+- Before the meeting, look at examples/samples related to your module.
+    - Try to code something that works.
+    - Bring your "demo" to the meeting.
+    - Become familiar with how your module will work.
+    
+Manuel - Look into how to put system together
+    - Central communication module, or all module just talk to each other?
+    
+Proposed Date/Time of next meeting:
+Wednesday 10/21 from 6 PM - 8 PM in Library (white board room)
+Purpose of Meeting: Determine High-Level Design and parts Detailed Design.

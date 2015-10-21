@@ -31,3 +31,14 @@ Stretch Goals:
 - Recognizing emotions
 
 
+Observer Patter Implementation:
+- Facial detection starts running when application starts. When it detect a face, it tries to recognize it and publishes a detection event. If face is recognized, it publishes a "successful recognition" event. Else, it publishes a "no recognition" event.
+    -Subscribers: Speech construction
+- When speech construction receives a recognition event, it constructs an appropriate greeting based on the event. After outputting greeting, the module enables speech recognition to listen for a command.
+-Speech recognition parses speech for recognizable command. If command is recognized, it calls appropriate function from action module
+
+
+Sequence of operations:
+- Application is executed, opening the user interface
+    - The UI class create the ModuleController (passing itself to the ModuleController)
+
