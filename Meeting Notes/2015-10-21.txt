@@ -1,0 +1,6 @@
+Meeting Notes 10/21
+
+UI
+- Perhaps added an alternate training mode (automatic snapshots as opposed to manual snapshots)
+- Have portion of UI devoted to displaying Jarvis talking
+- Have small separate window that gives feedback about what is happening.
