@@ -83,6 +83,10 @@
                         </Grid>
 
                     </GroupBox>
+                    
+                    <CheckBox Content="Have Jarvis Greet Users"
+                                 Margin="5"
+                                 />
 
                     <Button Name="SaveButton"
                             Content="Save"
@@ -107,7 +111,7 @@
                             Height="30"
                             Click="btnDisplayFeed_Click"/>
                     
-                    <RadioButton Name="rbtnEnableTracking"
+                    <CheckBox Name="rbtnEnableTracking"
                                  Content="Enable Tracking"
                                  HorizontalAlignment="Center"
                                  Margin="20"/>

@@ -9,10 +9,11 @@ using Emgu.CV.CvEnum;
 using System.Runtime.InteropServices;
 using System.Windows.Media.Imaging;
 using System.Windows;
+using System.Windows.Media;
 
 namespace JarvisEmulator
 {
-    public class FaceDetector
+    public class FaceDetector : IObservable<User>
     {
         #region Private Variables
 
@@ -28,8 +29,15 @@ namespace JarvisEmulator
         private List<string> NamePersons = new List<string>();
         private int ContTrain, NumLabels, t;
         private string name, names = null;
+        private volatile MCvAvgComp[][] facesDetected;
+
+        private System.Threading.Timer frameTimer;
+        private System.Threading.Timer detectionTimer;
+        private SortedSet<IObserver<User>> userObservers = new SortedSet<IObserver<User>>();
 
         #endregion
+
+        public BitmapSource CurrentFrame;
 
         [DllImport("gdi32")]
         private static extern int DeleteObject( IntPtr o );
@@ -40,14 +48,45 @@ namespace JarvisEmulator
             face = new HaarCascade("haarcascade_frontalface_default.xml");
         }
 
+        public void EnableFrameCapturing()
+        {
+            // Spawn the timer that populates the video feed with frames.
+            frameTimer = new System.Threading.Timer(RetrieveFrame, null, 0, 30);
+
+            // Spawn the timer that performs the detection.
+            detectionTimer = new System.Threading.Timer(DetectFaces, null, 0, 100);
+        }
+
         // Initialize face detection.
         public void InitializeCapture()
         {
-            // Initialize the capture device.
-            grabber = new Capture();
+            try
+            {
+                // Initialize the capture device.
+                grabber = new Capture();
 
-            // Dump the first frame.
-            grabber.QueryFrame();
+                // Dump the first frame.
+                grabber.QueryFrame();
+            }
+            catch ( Exception ex ) { }
+        }
+
+        private void RetrieveFrame( object state )
+        {
+            CurrentFrame = GetCurrentFrame(true);
+            (CurrentFrame as ImageSource).Freeze();
+        }
+
+        private void DetectFaces( object state )
+        {
+            if ( null != this.currentFrame )
+            {
+                // Convert it to grayscale
+                gray = currentFrame.Convert<Gray, Byte>();
+
+                // Create an array of detected faces.
+                facesDetected = gray.DetectHaarCascade(face, 1.2, 10, Emgu.CV.CvEnum.HAAR_DETECTION_TYPE.DO_CANNY_PRUNING, new System.Drawing.Size(20, 20));
+            }
         }
 
         // Retrieve a frame from the capture device, with faces optionally bounded by rectangles.
@@ -58,13 +97,8 @@ namespace JarvisEmulator
             currentFrame = grabber.QueryFrame().Resize(320, 240, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
 
             // Process the frame in order to detect faces.
+            if ( null != facesDetected )
             {
-                // Convert it to grayscale
-                gray = currentFrame.Convert<Gray, Byte>();
-
-                // Create an array of detected faces.
-                MCvAvgComp[][] facesDetected = gray.DetectHaarCascade(face, 1.2, 10, Emgu.CV.CvEnum.HAAR_DETECTION_TYPE.DO_CANNY_PRUNING, new System.Drawing.Size(20, 20));
-
                 //Action for each element detected
                 foreach ( MCvAvgComp f in facesDetected[0] )
                 {
@@ -76,9 +110,9 @@ namespace JarvisEmulator
                         currentFrame.Draw(f.rect, new Bgr(System.Drawing.Color.Red), 2);
                     }
                 }
-
-                return ToBitmapSource(currentFrame);
             }
+
+            return ToBitmapSource(currentFrame);
         }
 
         // Convert a bitmap image to a BitmapSource, which WPF can use to display the image.
@@ -100,5 +134,14 @@ namespace JarvisEmulator
             }
         }
 
+        public IDisposable Subscribe( IObserver<User> observer )
+        {
+            // Add the observer to the set.
+            userObservers.Add(observer);
+
+            // Provide the existing data to the observer.
+
+            return null;
+        }
     }
 }

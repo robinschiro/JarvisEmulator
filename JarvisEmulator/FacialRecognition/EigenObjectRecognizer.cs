@@ -129,7 +129,7 @@ namespace Emgu.CV
          _eigenValues = Array.ConvertAll<Image<Gray, Byte>, Matrix<float>>(images,
              delegate(Image<Gray, Byte> img)
              {
-                return new Matrix<float>(EigenDecomposite(img, _eigenImages, _avgImage));
+                return new Matrix<float>(ConstructEigenDecomposite(img, _eigenImages, _avgImage));
              });
 
          _labels = labels;
@@ -145,7 +145,7 @@ namespace Emgu.CV
       /// <param name="termCrit">The criteria for tranning</param>
       /// <param name="eigenImages">The resulting eigen images</param>
       /// <param name="avg">The resulting average image</param>
-      public static void CalcEigenObjects(Image<Gray, Byte>[] trainingImages, ref MCvTermCriteria termCrit, out Image<Gray, Single>[] eigenImages, out Image<Gray, Single> avg)
+      private static void CalcEigenObjects(Image<Gray, Byte>[] trainingImages, ref MCvTermCriteria termCrit, out Image<Gray, Single>[] eigenImages, out Image<Gray, Single> avg)
       {
          int width = trainingImages[0].Width;
          int height = trainingImages[0].Height;
@@ -181,7 +181,7 @@ namespace Emgu.CV
       /// <param name="eigenImages">The eigen images</param>
       /// <param name="avg">The average images</param>
       /// <returns>Eigen values of the decomposed image</returns>
-      public static float[] EigenDecomposite(Image<Gray, Byte> src, Image<Gray, Single>[] eigenImages, Image<Gray, Single> avg)
+      private static float[] ConstructEigenDecomposite(Image<Gray, Byte> src, Image<Gray, Single>[] eigenImages, Image<Gray, Single> avg)
       {
          return CvInvoke.cvEigenDecomposite(
              src.Ptr,
@@ -195,7 +195,7 @@ namespace Emgu.CV
       /// </summary>
       /// <param name="eigenValue">The eigen values</param>
       /// <returns>The projected image</returns>
-      public Image<Gray, Byte> EigenProjection(float[] eigenValue)
+      private Image<Gray, Byte> ConstructEigenProjection(float[] eigenValue)
       {
          Image<Gray, Byte> res = new Image<Gray, byte>(_avgImage.Width, _avgImage.Height);
          CvInvoke.cvEigenProjection(
@@ -211,9 +211,9 @@ namespace Emgu.CV
       /// </summary>
       /// <param name="image">The image to be compared from the training images</param>
       /// <returns>An array of eigen distance from every image in the training images</returns>
-      public float[] GetEigenDistances(Image<Gray, Byte> image)
+      private float[] GetEigenDistances(Image<Gray, Byte> image)
       {
-         using (Matrix<float> eigenValue = new Matrix<float>(EigenDecomposite(image, _eigenImages, _avgImage)))
+         using (Matrix<float> eigenValue = new Matrix<float>(ConstructEigenDecomposite(image, _eigenImages, _avgImage)))
             return Array.ConvertAll<Matrix<float>, float>(_eigenValues,
                 delegate(Matrix<float> eigenValueI)
                 {
@@ -228,7 +228,7 @@ namespace Emgu.CV
       /// <param name="index">The index of the most similar object</param>
       /// <param name="eigenDistance">The eigen distance of the most similar object</param>
       /// <param name="label">The label of the specific image</param>
-      public void FindMostSimilarObject(Image<Gray, Byte> image, out int index, out float eigenDistance, out String label)
+      private void FindMostSimilarObject(Image<Gray, Byte> image, out int index, out float eigenDistance, out String label)
       {
          float[] dist = GetEigenDistances(image);
 

@@ -66,9 +66,14 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Actions\ActionManager.cs" />
+    <Compile Include="Actions\RSSManager.cs" />
+    <Compile Include="Configuration\ConfigurationManager.cs" />
+    <Compile Include="Configuration\User.cs" />
     <Compile Include="FacialRecognition\FaceDetector.cs" />
-    <Compile Include="IModuleController.cs" />
-    <Compile Include="ModuleController.cs" />
+    <Compile Include="Speech\SpeechConstructor.cs" />
+    <Compile Include="Speech\SpeechRecognizer.cs" />
+    <Compile Include="SubscriptionManager.cs" />
     <Compile Include="tvToolbox\tvExtensions.cs" />
     <Compile Include="tvToolbox\tvFetchResource.cs" />
     <Compile Include="tvToolbox\tvProfile.cs" />
@@ -117,7 +122,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>Copy /Y "$(SolutionDir)DLLs\*" "$(TargetDir)"
-Copy /Y "$(SolutionDir)Configuration\*" "$(TargetDir)"</PostBuildEvent>
+Copy /Y "$(SolutionDir)ConfigurationData\*" "$(TargetDir)"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
