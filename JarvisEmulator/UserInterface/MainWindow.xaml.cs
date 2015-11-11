@@ -22,14 +22,31 @@ using System.Windows.Threading;
 
 namespace JarvisEmulator
 {
+    public struct UIData
+    {
+        public bool DrawDetectionRectangles;
+        public bool HaveJarvisGreetUser;
+        public List<User> Users;
+        public string PathToTrainingImages;
+
+        public bool SaveToProfile;
+    }
+
+
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, IObservable<UIData>, IObserver<BitmapSource>
     {
-        private SubscriptionManager subManager;
         private Timer frameTimer;
+        private BitmapSource currentFrame;
+        private List<User> users;
 
+        #region Observer Lists
+
+        private List<IObserver<UIData>> uiObservers = new List<IObserver<UIData>>();
+
+        #endregion
 
         public MainWindow()
         {
@@ -37,20 +54,14 @@ namespace JarvisEmulator
             InitializeComponent();
 
             // Create the Subscription Manager.
-            subManager = new SubscriptionManager(this);
+            SubscriptionManager subManager = new SubscriptionManager(this);
 
             // Spawn the timer that populates the video feed with frames.
             frameTimer = new Timer(DisplayFrame, null, 0, 30);
         }
 
-        #region Button Events
+        #region Events
 
-        private void btnDisplayFeed_Click( object sender, RoutedEventArgs e )
-        {
-            // During Application Idle (perhaps run this on a separate thread at some point),
-            // update the video feed with frames from the FaceDetector.
-            imgVideoFeed.Source = subManager.GetCurrentFrame();
-        }
         private void DisplayFrame( object state )
         {
             // Invoke Dispatcher in order to update the UI.
@@ -58,7 +69,11 @@ namespace JarvisEmulator
             DispatcherPriority.Background,
             new Action(() =>
             {
-                imgVideoFeed.Source = subManager.GetCurrentFrame();
+                // Only display the frames if the tab is selected.
+                if ( tabVideoFeed == tabControlMain.SelectedItem as TabItem )
+                {
+                    imgVideoFeed.Source = currentFrame;
+                }
             }));
         }
 
@@ -69,6 +84,17 @@ namespace JarvisEmulator
 
             tboxTGitPath.Text = dialog.FileName;
         }
+
+        private void PublishUIData( object sender, RoutedEventArgs e )
+        {
+            UIData packet = new UIData();
+            packet.DrawDetectionRectangles = cboxEnableTracking.IsChecked ?? false;
+            packet.HaveJarvisGreetUser = cboxGreetUsers.IsChecked ?? false;
+            packet.Users = users;
+
+            SubscriptionManager.Publish(uiObservers, packet);
+        }
+
 
         #endregion
 
@@ -86,6 +112,26 @@ namespace JarvisEmulator
             l_NewThread.Start();
 
             return l_NewThread;
+        }
+
+        public void OnNext( BitmapSource value )
+        {
+            currentFrame = value;
+        }
+
+        public void OnError( Exception error )
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnCompleted()
+        {
+            throw new NotImplementedException();
+        }
+
+        public IDisposable Subscribe( IObserver<UIData> observer )
+        {
+            return SubscriptionManager.Subscribe(uiObservers, observer);
         }
     }
 }

@@ -84,9 +84,9 @@
 
                     </GroupBox>
                     
-                    <CheckBox Content="Have Jarvis Greet Users"
-                                 Margin="5"
-                                 />
+                    <CheckBox Name="cboxGreetUsers"
+                              Content="Have Jarvis Greet Users"
+                              Margin="5" />
 
                     <Button Name="SaveButton"
                             Content="Save"
@@ -102,19 +102,12 @@
                     <Image Name="imgVideoFeed"
                            Width="320"
                            Height="240"/>
-
-                    <Button Name="btnDisplayFeed"
-                            Content="Display Feed"
-                            HorizontalAlignment="Center"
-                            Margin="10"
-                            Width="100"
-                            Height="30"
-                            Click="btnDisplayFeed_Click"/>
                     
-                    <CheckBox Name="rbtnEnableTracking"
+                    <CheckBox Name="cboxEnableTracking"
                                  Content="Enable Tracking"
                                  HorizontalAlignment="Center"
-                                 Margin="20"/>
+                                 Margin="20"
+                                 Click="PublishUIData"/>
                 </StackPanel>
             </TabItem>            
         </TabControl>

@@ -1,0 +1,14 @@
+// Application wide settings
+-TrainingImagesFolder=C:\Dropbox\UCF\POOP\JarvisEmulator\JarvisEmulator\TrainingImages
+-HaveJarvisGreetUsers=true
+
+// Settings for each user.
+-User=[
+    -Guid=63EF49A7-B6D4-43CD-8515-568332693F50
+    -FirstName=Robin
+    -LastName=Schiro
+    -CommandPair=[
+        -CommandKey=reddit
+        -CommandValue=www.reddit.com/funny.rss
+    -CommandPair=]
+-User=]

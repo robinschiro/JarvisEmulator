@@ -11,21 +11,56 @@ namespace JarvisEmulator
     {
         private FaceDetector faceDetector;
         private MainWindow userInterface;
+        private ConfigurationManager configManager;
 
         public SubscriptionManager(MainWindow userInterface)
         {
             this.userInterface = userInterface;
+            this.configManager = new ConfigurationManager();
 
             // Initialize the FaceDetector.
             faceDetector = new FaceDetector();
             faceDetector.InitializeCapture();
             faceDetector.EnableFrameCapturing();
 
+            // Create the subscriptions.
+            CreateSubscriptions();
         }
 
-        public BitmapSource GetCurrentFrame()
+        // Create all necessary subscriptions between the modules.
+        private void CreateSubscriptions()
         {
-            return faceDetector.CurrentFrame;
+            // Create subscriptions to the FaceDetector.
+            faceDetector.Subscribe(configManager);
+            faceDetector.Subscribe(userInterface);
+
+            // Create subscriptions for the MainWindow.
+            userInterface.Subscribe(faceDetector);
+            userInterface.Subscribe(configManager);
+
         }
+
+        #region Observer Pattern Utilities
+
+        public static void Publish<T>( IList<IObserver<T>> observers, T data )
+        {
+            foreach ( IObserver<T> observer in observers )
+            {
+                observer.OnNext(data);
+            }
+        }
+
+        public static IDisposable Subscribe<T>( IList<IObserver<T>> observers, IObserver<T> observer )
+        {
+            // Add the observer to the list if it is not already there.
+            if ( !observers.Contains(observer) )
+            {
+                observers.Add(observer);
+            }
+
+            return null;
+        }
+
+        #endregion
     }
 }

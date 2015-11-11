@@ -13,7 +13,7 @@ using System.Windows.Media;
 
 namespace JarvisEmulator
 {
-    public class FaceDetector : IObservable<User>
+    public class FaceDetector : IObservable<User>, IObservable<BitmapSource>, IObserver<UIData>
     {
         #region Private Variables
 
@@ -30,14 +30,20 @@ namespace JarvisEmulator
         private int ContTrain, NumLabels, t;
         private string name, names = null;
         private volatile MCvAvgComp[][] facesDetected;
+        private bool drawDetectionRectangles = false;
 
         private System.Threading.Timer frameTimer;
         private System.Threading.Timer detectionTimer;
-        private SortedSet<IObserver<User>> userObservers = new SortedSet<IObserver<User>>();
+
+        #region Observer Lists
+
+        private List<IObserver<User>> userObservers = new List<IObserver<User>>();
+        private List<IObserver<BitmapSource>> frameObservers = new List<IObserver<BitmapSource>>();
 
         #endregion
 
-        public BitmapSource CurrentFrame;
+
+        #endregion
 
         [DllImport("gdi32")]
         private static extern int DeleteObject( IntPtr o );
@@ -51,7 +57,7 @@ namespace JarvisEmulator
         public void EnableFrameCapturing()
         {
             // Spawn the timer that populates the video feed with frames.
-            frameTimer = new System.Threading.Timer(RetrieveFrame, null, 0, 30);
+            frameTimer = new System.Threading.Timer(GetCurrentFrame, null, 0, 30);
 
             // Spawn the timer that performs the detection.
             detectionTimer = new System.Threading.Timer(DetectFaces, null, 0, 100);
@@ -71,15 +77,9 @@ namespace JarvisEmulator
             catch ( Exception ex ) { }
         }
 
-        private void RetrieveFrame( object state )
-        {
-            CurrentFrame = GetCurrentFrame(true);
-            (CurrentFrame as ImageSource).Freeze();
-        }
-
         private void DetectFaces( object state )
         {
-            if ( null != this.currentFrame )
+            if ( null != currentFrame )
             {
                 // Convert it to grayscale
                 gray = currentFrame.Convert<Gray, Byte>();
@@ -90,7 +90,7 @@ namespace JarvisEmulator
         }
 
         // Retrieve a frame from the capture device, with faces optionally bounded by rectangles.
-        public BitmapSource GetCurrentFrame(bool drawDetectionRectangles)
+        public void GetCurrentFrame( object state )
         {
             // Get the current frame from capture device
             grabber.QueryFrame();
@@ -112,7 +112,11 @@ namespace JarvisEmulator
                 }
             }
 
-            return ToBitmapSource(currentFrame);
+            // Send the frame to all frame observers.
+            BitmapSource frameBitmap = ToBitmapSource(currentFrame);
+            frameBitmap.Freeze();
+            SubscriptionManager.Publish(frameObservers, frameBitmap);
+
         }
 
         // Convert a bitmap image to a BitmapSource, which WPF can use to display the image.
@@ -127,7 +131,7 @@ namespace JarvisEmulator
                   ptr,
                   IntPtr.Zero,
                   Int32Rect.Empty,
-                  System.Windows.Media.Imaging.BitmapSizeOptions.FromEmptyOptions());
+                  BitmapSizeOptions.FromEmptyOptions());
 
                 DeleteObject(ptr); //release the HBitmap
                 return bs;
@@ -136,12 +140,27 @@ namespace JarvisEmulator
 
         public IDisposable Subscribe( IObserver<User> observer )
         {
-            // Add the observer to the set.
-            userObservers.Add(observer);
+            return SubscriptionManager.Subscribe(userObservers, observer);
+        }
 
-            // Provide the existing data to the observer.
+        public IDisposable Subscribe( IObserver<BitmapSource> observer )
+        {
+            return SubscriptionManager.Subscribe(frameObservers, observer);
+        }
 
-            return null;
+        public void OnNext( UIData value )
+        {
+            drawDetectionRectangles = value.DrawDetectionRectangles;
+        }
+
+        public void OnError( Exception error )
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnCompleted()
+        {
+            throw new NotImplementedException();
         }
     }
 }
