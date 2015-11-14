@@ -8,5 +8,13 @@ namespace JarvisEmulator
 {
     public class ActionManager
     {
+        public static void CommandLogout()
+        {
+
+            System.Diagnostics.Process.Start("shutdown", "-l");
+        }
+
     }
+
+
 }
