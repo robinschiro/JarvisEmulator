@@ -22,7 +22,12 @@ namespace JarvisEmulator
 
         public IDisposable Subscribe( IObserver<ActionData> observer )
         {
-            throw new NotImplementedException();
+            return null;
+        }
+
+        public static void CommandLogout()
+        {
+            System.Diagnostics.Process.Start("shutdown", "-l");
         }
     }
 }
