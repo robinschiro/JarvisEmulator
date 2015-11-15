@@ -47,5 +47,10 @@ namespace JarvisEmulator
             this.commandDictionary = commandDictionary;
         }
 
+        public override string ToString()
+        {
+            return firstName + " " + lastName;
+        }
+
     }
 }

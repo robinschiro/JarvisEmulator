@@ -8,5 +8,17 @@ namespace JarvisEmulator
 {
     public class SpeechRecognizer
     {
+        List<User> users;
+
+        public SpeechRecognizer()
+        {
+
+        }
+
+        public void EnableListening()
+        {
+
+        }
+
     }
 }

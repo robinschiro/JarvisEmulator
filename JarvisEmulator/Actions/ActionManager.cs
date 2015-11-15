@@ -6,7 +6,23 @@ using System.Threading.Tasks;
 
 namespace JarvisEmulator
 {
-    public class ActionManager
+    public struct ActionData
     {
+        public string Message;
+    }
+
+    public class ActionManager : IObservable<ActionData>
+    {
+        RSSManager rssManager;
+
+        public ActionManager()
+        {
+            rssManager = new RSSManager();
+        }
+
+        public IDisposable Subscribe( IObserver<ActionData> observer )
+        {
+            throw new NotImplementedException();
+        }
     }
 }

@@ -19,6 +19,7 @@ using System.Runtime.InteropServices;
 using Microsoft.Win32;
 using System.Threading;
 using System.Windows.Threading;
+using System.Collections.ObjectModel;
 
 namespace JarvisEmulator
 {
@@ -36,11 +37,11 @@ namespace JarvisEmulator
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, IObservable<UIData>, IObserver<BitmapSource>
+    public partial class MainWindow : Window, IObservable<UIData>, IObserver<BitmapSource>, IObserver<ConfigData>
     {
         private Timer frameTimer;
         private BitmapSource currentFrame;
-        private List<User> users;
+        private ObservableCollection<User> users;
 
         #region Observer Lists
 
@@ -55,6 +56,9 @@ namespace JarvisEmulator
 
             // Create the Subscription Manager.
             SubscriptionManager subManager = new SubscriptionManager(this);
+
+            // Set the items source of the User Selection dropdown menu.
+            cboxUserSelection.ItemsSource = users;
 
             // Spawn the timer that populates the video feed with frames.
             frameTimer = new Timer(DisplayFrame, null, 0, 30);
@@ -88,9 +92,9 @@ namespace JarvisEmulator
         private void PublishUIData( object sender, RoutedEventArgs e )
         {
             UIData packet = new UIData();
-            packet.DrawDetectionRectangles = cboxEnableTracking.IsChecked ?? false;
-            packet.HaveJarvisGreetUser = cboxGreetUsers.IsChecked ?? false;
-            packet.Users = users;
+            packet.DrawDetectionRectangles = chkEnableTracking.IsChecked ?? false;
+            packet.HaveJarvisGreetUser = chkGreetUsers.IsChecked ?? false;
+            packet.Users = users.ToList<User>();
 
             SubscriptionManager.Publish(uiObservers, packet);
         }
@@ -112,6 +116,18 @@ namespace JarvisEmulator
             l_NewThread.Start();
 
             return l_NewThread;
+        }
+
+        // Update the user interface using information from the Configuration Manager.
+        // This should only be called at application initialization.
+        public void OnNext( ConfigData value )
+        {
+            // Populate the user collection.
+            users = new ObservableCollection<User>(value.Users);
+
+            // Update the 
+
+
         }
 
         public void OnNext( BitmapSource value )

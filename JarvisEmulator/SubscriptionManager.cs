@@ -12,19 +12,28 @@ namespace JarvisEmulator
         private FaceDetector faceDetector;
         private MainWindow userInterface;
         private ConfigurationManager configManager;
+        private SpeechRecognizer speechRecognizer;
 
         public SubscriptionManager(MainWindow userInterface)
         {
+            // Initialize the modules.
             this.userInterface = userInterface;
-            this.configManager = new ConfigurationManager();
-
-            // Initialize the FaceDetector.
             faceDetector = new FaceDetector();
-            faceDetector.InitializeCapture();
+            configManager = new ConfigurationManager();
+            speechRecognizer = new SpeechRecognizer();
+
+            // Create the subscriptions. Subscriptions must be created before the modules are "turned on".
+            CreateSubscriptions();
+
+            // Parse configuration data.
+            configManager.ParseProfile();
+
+            // Turn on the FaceDetector.
+            faceDetector.InitializeCaptureDevice();
             faceDetector.EnableFrameCapturing();
 
-            // Create the subscriptions.
-            CreateSubscriptions();
+            // Turn on the SpeechRecognizer.
+            speechRecognizer.EnableListening();
         }
 
         // Create all necessary subscriptions between the modules.
@@ -37,6 +46,9 @@ namespace JarvisEmulator
             // Create subscriptions for the MainWindow.
             userInterface.Subscribe(faceDetector);
             userInterface.Subscribe(configManager);
+
+            // Create subscriptions to the ConfigurationManager.
+            configManager.Subscribe(userInterface);
 
         }
 

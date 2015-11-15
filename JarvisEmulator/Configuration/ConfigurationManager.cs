@@ -16,7 +16,7 @@ namespace JarvisEmulator
         public string PathToTrainingImages;
     }
 
-    public class ConfigurationManager : IObserver<User>, IObserver<UIData>
+    public class ConfigurationManager : IObservable<ConfigData>, IObserver<User>, IObserver<UIData>
     {
         #region Configuration Members
 
@@ -30,19 +30,17 @@ namespace JarvisEmulator
 
         #region Observer Lists
 
-
+        List<IObserver<ConfigData>> configObservers = new List<IObserver<ConfigData>>();
 
         #endregion
 
         public ConfigurationManager()
         {
-            // Read and parse the configuration file to populate the list of users.
-            ParseProfile();
 
         }
 
         // Create a list of users using the data in the configuration file.
-        private void ParseProfile()
+        public void ParseProfile()
         {
             // Temporary variables used for creating each user instance.
             string firstName;
@@ -86,6 +84,16 @@ namespace JarvisEmulator
                 // Add the user to the list.
                 users.Add(new User(guid, firstName, lastName, commandDictionary));
             }
+
+            // Create a config data packet.
+            ConfigData data = new ConfigData();
+            data.DrawDetectionRectangles = profile.bValue("-DrawDetectionRectangles", false);
+            data.HaveJarvisGreetUser = haveJarvisGreetUsers;
+            data.PathToTrainingImages = pathToTrainingImages;
+            data.Users = users;
+
+            // Send configuration information to the observers.
+            SubscriptionManager.Publish(configObservers, data);
         }
 
         public void OnCompleted()
@@ -105,6 +113,11 @@ namespace JarvisEmulator
 
         public void OnNext( UIData value )
         {
+        }
+
+        public IDisposable Subscribe( IObserver<ConfigData> observer )
+        {
+            return SubscriptionManager.Subscribe(configObservers, observer);
         }
     }
 }

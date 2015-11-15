@@ -10,10 +10,11 @@ using System.Runtime.InteropServices;
 using System.Windows.Media.Imaging;
 using System.Windows;
 using System.Windows.Media;
+using System.Drawing;
 
 namespace JarvisEmulator
 {
-    public class FaceDetector : IObservable<User>, IObservable<BitmapSource>, IObserver<UIData>
+    public class FaceDetector : IObservable<User>, IObservable<BitmapSource>, IObserver<UIData>, IObserver<ConfigData>
     {
         #region Private Variables
 
@@ -27,9 +28,11 @@ namespace JarvisEmulator
         private List<Image<Gray, byte>> trainingImages = new List<Image<Gray, byte>>();
         private List<string> labels = new List<string>();
         private List<string> NamePersons = new List<string>();
+        private List<User> users;
         private int ContTrain, NumLabels, t;
         private string name, names = null;
-        private volatile MCvAvgComp[][] facesDetected;
+        private MCvAvgComp[][] facesDetected;
+        private volatile List<Rectangle> faceRectangles = new List<Rectangle>();
         private bool drawDetectionRectangles = false;
 
         private System.Threading.Timer frameTimer;
@@ -64,7 +67,7 @@ namespace JarvisEmulator
         }
 
         // Initialize face detection.
-        public void InitializeCapture()
+        public void InitializeCaptureDevice()
         {
             try
             {
@@ -85,7 +88,15 @@ namespace JarvisEmulator
                 gray = currentFrame.Convert<Gray, Byte>();
 
                 // Create an array of detected faces.
+                // TODO: Memory access/write error occurs here.
                 facesDetected = gray.DetectHaarCascade(face, 1.2, 10, Emgu.CV.CvEnum.HAAR_DETECTION_TYPE.DO_CANNY_PRUNING, new System.Drawing.Size(20, 20));
+
+                // Update the list storing the current face rectangles.
+                faceRectangles.Clear();
+                foreach ( MCvAvgComp f in facesDetected[0] )
+                {
+                    faceRectangles.Add(f.rect);
+                }
             }
         }
 
@@ -97,26 +108,27 @@ namespace JarvisEmulator
             currentFrame = grabber.QueryFrame().Resize(320, 240, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
 
             // Process the frame in order to detect faces.
-            if ( null != facesDetected )
+            if ( null != faceRectangles )
             {
                 //Action for each element detected
-                foreach ( MCvAvgComp f in facesDetected[0] )
+                foreach ( Rectangle rect in faceRectangles )
                 {
                     //result = currentFrame.Copy(f.rect).Convert<Gray, byte>().Resize(100, 100, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
 
                     // Draw a rectangle around each detected face.
                     if ( drawDetectionRectangles )
                     {
-                        currentFrame.Draw(f.rect, new Bgr(System.Drawing.Color.Red), 2);
+                        currentFrame.Draw(rect, new Bgr(System.Drawing.Color.Red), 2);
                     }
                 }
             }
 
-            // Send the frame to all frame observers.
+            // Convert the frame to something viewable within WPF and freeze it so that it can be displayed.
             BitmapSource frameBitmap = ToBitmapSource(currentFrame);
             frameBitmap.Freeze();
-            SubscriptionManager.Publish(frameObservers, frameBitmap);
 
+            // Send the frame to all frame observers.
+            SubscriptionManager.Publish(frameObservers, frameBitmap);
         }
 
         // Convert a bitmap image to a BitmapSource, which WPF can use to display the image.
@@ -159,6 +171,11 @@ namespace JarvisEmulator
         }
 
         public void OnCompleted()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnNext( ConfigData value )
         {
             throw new NotImplementedException();
         }

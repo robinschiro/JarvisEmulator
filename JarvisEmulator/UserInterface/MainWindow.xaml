@@ -24,30 +24,13 @@
             <TabItem Name="tabConfig"
                      Header="Configuration" >
                 <StackPanel Name="pnlConfig">
-                    <GroupBox Name="gboxRepo"
-                              Header="None">
-                        <Grid Name="gridRepo">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition/>
-                            </Grid.ColumnDefinitions>
-
-                            <Label Name="lblRepo"
-                                   Content="None: "
-                                   Grid.Column="0" />
-
-                            <TextBox Name="tboxRepoURL"
-                                     Grid.Column="1"/>
-
-                        </Grid>
-
-                    </GroupBox>
                     <GroupBox Name="gboxPaths"
-                              Header="None">
+                              Header="Application Settings" >
                         <Grid Name="gridPaths">
                             <Grid.RowDefinitions>
                                 <RowDefinition/>
                                 <RowDefinition Height="10"/>
+                                <RowDefinition/>
                                 <RowDefinition/>
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
@@ -57,7 +40,7 @@
                             </Grid.ColumnDefinitions>
 
                             <Label Name="lblTGitPath"
-                                   Content="None: "
+                                   Content="Training Images Folder: "
                                    Grid.Column="0"
                                    Grid.Row="0"/>
                             <TextBox Name="tboxTGitPath"
@@ -68,26 +51,41 @@
                                     Style="{StaticResource BrowseButtonStyle}"
                                     Click="BrowseForFile"/>
 
-                            <Label Name="lblLocalRepoPath"
-                                   Content="None: "
-                                   Grid.Column="0"
-                                   Grid.Row="2"/>
-                            <TextBox Name="tboxLocalRepoPath"
-                                     Grid.Column="1"
-                                     Grid.Row="2"/>
-                            <Button Name="btnBrowseForLocalRepo"
-                                    Grid.Row="2"
-                                    Style="{StaticResource BrowseButtonStyle}"
-                                    Click="BrowseForFile"/>
-
+                            <CheckBox Name="chkGreetUsers"
+                                      Content="Have Jarvis Greet Users"
+                                      Margin="10" 
+                                      Grid.Column="0"
+                                      Grid.ColumnSpan="2"
+                                      Grid.Row="2" />
                         </Grid>
-
                     </GroupBox>
                     
-                    <CheckBox Name="cboxGreetUsers"
-                              Content="Have Jarvis Greet Users"
-                              Margin="5" />
+                    <GroupBox Name="gboxUserSettings"
+                              Header="User Settings" >
+                        <StackPanel Name="pnlUserSettings">
 
+                            <Label Name="lblUserSelection"
+                                   Content="Selected User: " />
+                            <ComboBox Name="cboxUserSelection" />
+                                      
+
+                            <Label Name="lblRepo"
+                                   Content="None: "
+                                   Grid.Column="0" />
+
+                            <TextBox Name="tboxRepoURL"
+                                     Grid.Column="1"/>
+
+                            <Button Name="NewUserButton"
+                                    Content="New User"
+                                    Margin="10"
+                                    Width="75"
+                                    VerticalAlignment="Bottom" />
+
+                        </StackPanel>
+
+                    </GroupBox>
+                                      
                     <Button Name="SaveButton"
                             Content="Save"
                             Margin="10"
@@ -103,7 +101,7 @@
                            Width="320"
                            Height="240"/>
                     
-                    <CheckBox Name="cboxEnableTracking"
+                    <CheckBox Name="chkEnableTracking"
                                  Content="Enable Tracking"
                                  HorizontalAlignment="Center"
                                  Margin="20"
