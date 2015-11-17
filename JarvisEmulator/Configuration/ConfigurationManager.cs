@@ -13,6 +13,7 @@ namespace JarvisEmulator
         public bool DrawDetectionRectangles;
         public bool HaveJarvisGreetUser;
         public List<User> Users;
+        public User ActiveUser;
         public string PathToTrainingImages;
     }
 
