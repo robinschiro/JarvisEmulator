@@ -27,23 +27,21 @@ namespace JarvisEmulator
         public void EnableListening()
         {
 
-        }        
+        }
 
         private void button2_Click(object sender, RoutedEventArgs e)
         {
-          //  button2.IsEnabled = false;
-         //   button3.IsEnabled = true;
+            //  button2.IsEnabled = false;
+            //   button3.IsEnabled = true;
             Choices sList = new Choices();
 
             //put these in a text file
             string[] frFile = File.ReadAllLines(Environment.CurrentDirectory + "\\actions.txt");
 
             sList.Add(new string[] { "hello","hello Jarvis", "hi","hi Jarvis","howdy Jarvis","howdy", "ola", "ola Jarvis",
-                "OK Jarvis goodbye","OK Jarvis bye","OK Jarvis buy","OK Jarvis close","OK Jarvis exit", "OK Jarvis see you later", "OK Jarvis by",
-                "OK Jarvis log out", "OK Jarvis open",
-                "OK Jarvis take my picture", "OK Jarvis take my photo", "OK Jarvis cheese", "OK Jarvis take my selfie", "OK Jarvis i feel pretty today"
-
-                , "ok jarvis how's the weather", "oh stop it you", "ok jarvis open youtube", "thank you jarvis"
+                "OK Jarvis goodbye","OK Jarvis bye","OK Jarvis exit", "OK Jarvis see you later",
+                "OK Jarvis log out", "OK Jarvis open", "OK Jarvis close",
+                "OK Jarvis take my picture", "OK Jarvis take my photo", "OK Jarvis cheese", "OK Jarvis take my selfie"
             });
             try
             {
@@ -114,11 +112,39 @@ namespace JarvisEmulator
 
             }
 
+            if (command.StartsWith("OK Jarvis close"))
+            {
+                sSynth.Speak("alrighty, closing");
+                System.Diagnostics.Process[] procs = null;
+                try
+                {
+                    procs = Process.GetProcessesByName("winword");
+
+                    Process close = procs[0];
+
+                    if (!close.HasExited)
+                    {
+                        close.Kill();
+                    }
+                }
+                finally
+                {
+                    if (procs != null)
+                    {
+                        foreach (Process p in procs)
+                        {
+                            p.Dispose();
+                        }
+                    }
+                }
+            }
+
+
             if (command.StartsWith("OK Jarvis"))
             {
                 command = command.Replace("OK Jarvis ", "");
                 if (command.ToLower() == "goodbye" || command.ToLower() == "goodbye" || command.ToLower() == "buy" || command.ToLower() == "bye" ||
-                    command.ToLower() == "by" || command.ToLower() == "close")
+                    command.ToLower() == "by")
                 {
                     //will be replaced with call to speech constructor
                     if (randomNumber == 1)
@@ -136,7 +162,7 @@ namespace JarvisEmulator
                         sSynth.Speak("take care, smiley face");
 
                     }
-                 //fix this   Close();
+                    //fix this   Close();
                 }
 
                 if (command.ToLower() == "log out")
@@ -154,8 +180,8 @@ namespace JarvisEmulator
 
             }
 
-        //    textBox.Text = textBox.Text + " " + e.Result.Text.ToString();
-        //    textBox.Text = textBox.Text + "\n";
+            //    textBox.Text = textBox.Text + " " + e.Result.Text.ToString();
+            //    textBox.Text = textBox.Text + "\n";
 
         }
 
