@@ -20,7 +20,7 @@ namespace JarvisEmulator
             rssManager = new RSSManager();
         }
 
-        public IDisposable Subscribe( IObserver<ActionData> observer )
+        public IDisposable Subscribe(IObserver<ActionData> observer)
         {
             return null;
         }
@@ -29,5 +29,41 @@ namespace JarvisEmulator
         {
             System.Diagnostics.Process.Start("shutdown", "-l");
         }
+
+        public static void CommandOpenApplication(String app)
+        {
+            System.Diagnostics.Process proc = new System.Diagnostics.Process();
+            proc.EnableRaisingEvents = false;
+            proc.StartInfo.FileName = app;
+            proc.Start();
+        }
+
+        public static void CommandCloseApplication(String app)
+        {
+            System.Diagnostics.Process[] procs = null;
+            try
+            {
+                procs = System.Diagnostics.Process.GetProcessesByName(app);
+
+                System.Diagnostics.Process close = procs[0];
+
+                if (!close.HasExited)
+                {
+                    close.Kill();
+                }
+            }
+            finally
+            {
+                if (procs != null)
+                {
+                    foreach (System.Diagnostics.Process p in procs)
+                    {
+                        p.Dispose();
+                    }
+                }
+            }
+        }
+
+
     }
 }
