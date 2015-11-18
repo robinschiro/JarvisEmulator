@@ -11,13 +11,13 @@ using System.Windows;
 
 namespace JarvisEmulator
 {
-    public class SpeechRecognizer
+    public class SpeechRecognizer : IObserver<ConfigData>
     {
-        List<User> users = new List<User>();
         SpeechSynthesizer sSynth = new SpeechSynthesizer();
         PromptBuilder pBuilder = new PromptBuilder();
         SpeechRecognitionEngine sRecognize = new SpeechRecognitionEngine();
         List<Word> words = new List<Word>();
+        User ActiveUser;
 
         public SpeechRecognizer()
         {
@@ -39,10 +39,9 @@ namespace JarvisEmulator
             string[] frFile = File.ReadAllLines(Environment.CurrentDirectory + "\\actions.txt");
 
             sList.Add(new string[] { "hello","hello Jarvis", "hi","hi Jarvis","howdy Jarvis","howdy", "ola", "ola Jarvis",
-                "OK Jarvis goodbye","OK Jarvis bye","OK Jarvis exit", "OK Jarvis see you later",
-                "OK Jarvis log out", "OK Jarvis open", "OK Jarvis close",
-                "OK Jarvis take my picture", "OK Jarvis take my photo", "OK Jarvis cheese", "OK Jarvis take my selfie"
-            });
+                "OK Jarvis","OK Jarvis goodbye","OK Jarvis bye","OK Jarvis exit", "OK Jarvis see you later",
+                "OK Jarvis log out", "OK Jarvis open", "OK Jarvis close", "word",
+                "OK Jarvis take my picture", "OK Jarvis take my photo", "OK Jarvis cheese", "OK Jarvis take my selfie"});
             try
             {
                 foreach (string line in frFile)
@@ -85,8 +84,8 @@ namespace JarvisEmulator
             int randomNumber = random.Next(0, 6);
 
 
-            if (command.ToLower() == "hello" || command.ToLower() == "hello jarvis" || command.ToLower() == "high" || command.ToLower() == "high jarvis" ||
-                command.ToLower() == "hi" || command.ToLower() == "hi jarvis" || command.ToLower() == "howdy" | command.ToLower() == "ola" || command.ToLower() == "howdy jarvis")
+            if (command.ToLower() == "hello" || command.ToLower() == "hello jarvis" || command.ToLower() == "hi" || command.ToLower() == "hi jarvis" ||
+                command.ToLower() == "howdy" || command.ToLower() == "ola" || command.ToLower() == "howdy jarvis")
             {
                 //will be replaced with call to speech constructor
                 sSynth.Speak("Hello");
@@ -143,8 +142,7 @@ namespace JarvisEmulator
             if (command.StartsWith("OK Jarvis"))
             {
                 command = command.Replace("OK Jarvis ", "");
-                if (command.ToLower() == "goodbye" || command.ToLower() == "goodbye" || command.ToLower() == "buy" || command.ToLower() == "bye" ||
-                    command.ToLower() == "by")
+                if (command.ToLower() == "goodbye" || command.ToLower() == "goodbye" || command.ToLower() == "bye")
                 {
                     //will be replaced with call to speech constructor
                     if (randomNumber == 1)
@@ -162,7 +160,8 @@ namespace JarvisEmulator
                         sSynth.Speak("take care, smiley face");
 
                     }
-                    //fix this   Close();
+                    //Close();
+
                 }
 
                 if (command.ToLower() == "log out")
@@ -183,6 +182,21 @@ namespace JarvisEmulator
             //    textBox.Text = textBox.Text + " " + e.Result.Text.ToString();
             //    textBox.Text = textBox.Text + "\n";
 
+        }
+
+        public void OnNext(ConfigData user)
+        {
+            ActiveUser = user.ActiveUser;
+        }
+
+        public void OnError(Exception error)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnCompleted()
+        {
+            throw new NotImplementedException();
         }
 
         class Word
