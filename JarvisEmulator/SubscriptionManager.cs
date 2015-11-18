@@ -13,6 +13,7 @@ namespace JarvisEmulator
         private MainWindow userInterface;
         private ConfigurationManager configManager;
         private SpeechRecognizer speechRecognizer;
+        private SpeechConstructor speechConstructor;
 
         public SubscriptionManager(MainWindow userInterface)
         {
@@ -21,6 +22,8 @@ namespace JarvisEmulator
             faceDetector = new FaceDetector();
             configManager = new ConfigurationManager();
             speechRecognizer = new SpeechRecognizer();
+            speechConstructor = new SpeechConstructor();
+            // TODO: Initialize the ActionManager
 
             // Create the subscriptions. Subscriptions must be created before the modules are "turned on".
             CreateSubscriptions();
@@ -49,6 +52,8 @@ namespace JarvisEmulator
 
             // Create subscriptions to the ConfigurationManager.
             configManager.Subscribe(userInterface);
+
+            // TODO: Create subscriptions to the ActionManager from the Speech Constructor
 
         }
 
