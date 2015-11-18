@@ -40,6 +40,11 @@ namespace JarvisEmulator
 
         }
 
+        private void UpdateProfile( UIData data )
+        {
+
+        }
+
         // Create a list of users using the data in the configuration file.
         public void ParseProfile()
         {

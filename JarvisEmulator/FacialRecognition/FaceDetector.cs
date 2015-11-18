@@ -89,7 +89,11 @@ namespace JarvisEmulator
 
                 // Create an array of detected faces.
                 // TODO: Memory access/write error occurs here.
-                facesDetected = gray.DetectHaarCascade(face, 1.2, 10, Emgu.CV.CvEnum.HAAR_DETECTION_TYPE.DO_CANNY_PRUNING, new System.Drawing.Size(20, 20));
+                try
+                {
+                    facesDetected = gray.DetectHaarCascade(face, 1.2, 10, Emgu.CV.CvEnum.HAAR_DETECTION_TYPE.DO_CANNY_PRUNING, new System.Drawing.Size(20, 20));
+                }
+                catch (Exception ex) { }
 
                 // Update the list storing the current face rectangles.
                 faceRectangles.Clear();

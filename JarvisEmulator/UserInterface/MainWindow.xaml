@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:JarvisEmulator"
         mc:Ignorable="d"
-        Title="Jarvis Emulator" Height="400" Width="525">
+        Title="Jarvis Emulator" Height="500" Width="525">
 
     <Window.Resources>
         <Style x:Key="BrowseButtonStyle" TargetType="Button">
@@ -66,7 +66,23 @@
 
                             <Label Name="lblUserSelection"
                                    Content="Selected User: " />
-                            <ComboBox Name="cboxUserSelection" />
+                            <ComboBox Name="cboxUserSelection"
+                                      SelectionChanged="cboxUserSelection_SelectionChanged"/>
+
+                            <Label Content="Command Dictionary"
+                                   Margin="0, 10, 0, 0"/>
+                            <ListView Name="lvCommandDictionary">
+                                <ListView.View>
+                                    <GridView>
+                                        <GridViewColumn Header="Command"
+                                                        Width="100"
+                                                        DisplayMemberBinding="{Binding Key}"/>
+                                        <GridViewColumn Header="URL/Path"
+                                                        Width="300"
+                                                        DisplayMemberBinding="{Binding Value}"/>
+                                    </GridView>
+                                </ListView.View>
+                            </ListView>
                                       
 
                             <Label Name="lblRepo"
@@ -80,7 +96,8 @@
                                     Content="New User"
                                     Margin="10"
                                     Width="75"
-                                    VerticalAlignment="Bottom" />
+                                    VerticalAlignment="Bottom"
+                                    Click="NewUserButton_Click"/>
 
                         </StackPanel>
 
@@ -90,7 +107,8 @@
                             Content="Save"
                             Margin="10"
                             Width="75"
-                            VerticalAlignment="Bottom" />
+                            VerticalAlignment="Bottom"
+                            Click="SaveButton_Click"/>
 
                 </StackPanel>
             </TabItem>

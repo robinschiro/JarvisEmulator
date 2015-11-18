@@ -59,12 +59,31 @@ namespace JarvisEmulator
 
             // Set the items source of the User Selection dropdown menu.
             cboxUserSelection.ItemsSource = users;
+            cboxUserSelection.SelectedIndex = 0;
+            cboxUserSelection_SelectionChanged(null, null);
 
             // Spawn the timer that populates the video feed with frames.
             frameTimer = new Timer(DisplayFrame, null, 0, 30);
         }
 
         #region Events
+
+        private void NewUserButton_Click( object sender, RoutedEventArgs e )
+        {
+
+        }
+
+        private void SaveButton_Click( object sender, RoutedEventArgs e )
+        {
+
+        }
+
+        private void cboxUserSelection_SelectionChanged( object sender, SelectionChangedEventArgs e )
+        {
+            // Update the binding of the Commands Listview.
+            lvCommandDictionary.ItemsSource = (cboxUserSelection.SelectedItem as User).CommandDictionary;
+
+        }
 
         private void DisplayFrame( object state )
         {
@@ -125,7 +144,7 @@ namespace JarvisEmulator
             // Populate the user collection.
             users = new ObservableCollection<User>(value.Users);
 
-            // Update the 
+            // Update the user interface.
 
 
         }
