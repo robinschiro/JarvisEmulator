@@ -11,6 +11,7 @@ using System.Windows.Media.Imaging;
 using System.Windows;
 using System.Windows.Media;
 using System.Drawing;
+using System.Collections.Concurrent;
 
 namespace JarvisEmulator
 {
@@ -33,6 +34,7 @@ namespace JarvisEmulator
         private string name, names = null;
         private MCvAvgComp[][] facesDetected;
         private volatile List<Rectangle> faceRectangles = new List<Rectangle>();
+        private ConcurrentBag<Rectangle> faceRectangleBag = new ConcurrentBag<Rectangle>();
         private bool drawDetectionRectangles = false;
 
         private System.Threading.Timer frameTimer;
@@ -88,7 +90,6 @@ namespace JarvisEmulator
                 gray = currentFrame.Convert<Gray, Byte>();
 
                 // Create an array of detected faces.
-                // TODO: Memory access/write error occurs here.
                 try
                 {
                     facesDetected = gray.DetectHaarCascade(face, 1.2, 10, Emgu.CV.CvEnum.HAAR_DETECTION_TYPE.DO_CANNY_PRUNING, new System.Drawing.Size(20, 20));
@@ -96,10 +97,10 @@ namespace JarvisEmulator
                 catch (Exception ex) { }
 
                 // Update the list storing the current face rectangles.
-                faceRectangles.Clear();
+                faceRectangleBag = new ConcurrentBag<Rectangle>();
                 foreach ( MCvAvgComp f in facesDetected[0] )
                 {
-                    faceRectangles.Add(f.rect);
+                    faceRectangleBag.Add(f.rect);
                 }
             }
         }
@@ -112,10 +113,11 @@ namespace JarvisEmulator
             currentFrame = grabber.QueryFrame().Resize(320, 240, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
 
             // Process the frame in order to detect faces.
-            if ( null != faceRectangles )
+            if ( null != faceRectangleBag )
             {
-                //Action for each element detected
-                foreach ( Rectangle rect in faceRectangles )
+                // Action for each element detected
+                // TODO: Collecition is modifed mid-enumeration. Need to fix.
+                foreach ( Rectangle rect in faceRectangleBag )
                 {
                     //result = currentFrame.Copy(f.rect).Convert<Gray, byte>().Resize(100, 100, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
 

@@ -15,6 +15,8 @@ namespace JarvisEmulator
         public List<User> Users;
         public User ActiveUser;
         public string PathToTrainingImages;
+
+        public bool IsInit;
     }
 
     public class ConfigurationManager : IObservable<ConfigData>, IObserver<User>, IObserver<UIData>
@@ -42,6 +44,10 @@ namespace JarvisEmulator
 
         private void UpdateProfile( UIData data )
         {
+            // Update the profile file with data from the UIData packet.
+            profile.Add("-TrainingImagesFolder", data.PathToTrainingImages);
+            profile.Add("-HaveJarvisGreetUsers", data.HaveJarvisGreetUser);
+            //profile.Add("")
 
         }
 
@@ -97,6 +103,7 @@ namespace JarvisEmulator
             data.HaveJarvisGreetUser = haveJarvisGreetUsers;
             data.PathToTrainingImages = pathToTrainingImages;
             data.Users = users;
+            data.IsInit = true;
 
             // Send configuration information to the observers.
             SubscriptionManager.Publish(configObservers, data);
@@ -119,6 +126,7 @@ namespace JarvisEmulator
 
         public void OnNext( UIData value )
         {
+            UpdateProfile(value);
         }
 
         public IDisposable Subscribe( IObserver<ConfigData> observer )

@@ -20,6 +20,7 @@ using Microsoft.Win32;
 using System.Threading;
 using System.Windows.Threading;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 
 namespace JarvisEmulator
 {
@@ -37,11 +38,13 @@ namespace JarvisEmulator
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, IObservable<UIData>, IObserver<BitmapSource>, IObserver<ConfigData>
+    public partial class MainWindow : Window, INotifyPropertyChanged, IObservable<UIData>, IObserver<BitmapSource>, IObserver<ConfigData>
     {
         private Timer frameTimer;
         private BitmapSource currentFrame;
         private ObservableCollection<User> users;
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         #region Observer Lists
 
@@ -60,10 +63,18 @@ namespace JarvisEmulator
             // Set the items source of the User Selection dropdown menu.
             cboxUserSelection.ItemsSource = users;
             cboxUserSelection.SelectedIndex = 0;
-            cboxUserSelection_SelectionChanged(null, null);
+            cboxUserSelection_SelectionChanged();
 
             // Spawn the timer that populates the video feed with frames.
             frameTimer = new Timer(DisplayFrame, null, 0, 30);
+        }
+
+        private void NotifyPropertyChanged( string propertyName = "" )
+        {
+            if ( PropertyChanged != null )
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
         }
 
         #region Events
@@ -75,14 +86,77 @@ namespace JarvisEmulator
 
         private void SaveButton_Click( object sender, RoutedEventArgs e )
         {
-
+            // Update all subscribers.
+            PublishUIData();
         }
 
-        private void cboxUserSelection_SelectionChanged( object sender, SelectionChangedEventArgs e )
+        private void cboxUserSelection_SelectionChanged( object sender = null, SelectionChangedEventArgs e = null)
         {
             // Update the binding of the Commands Listview.
-            lvCommandDictionary.ItemsSource = (cboxUserSelection.SelectedItem as User).CommandDictionary;
+            User selectedUser = (cboxUserSelection.SelectedItem as User);
+            if ( null != selectedUser )
+            {
+                lvCommandDictionary.ItemsSource = selectedUser.CommandDictionary;
+            }           
+        }
 
+        private void btnModifyEntry_Click( object sender, RoutedEventArgs e )
+        {
+            // Retrieve the item currently selected in the listview.
+            object selectedItem = lvCommandDictionary.SelectedItem;
+            if ( null != selectedItem )
+            { 
+                KeyValuePair<string, string> commandPair = (KeyValuePair<string, string>)selectedItem;
+
+                CommandEntryDialog dialog = new CommandEntryDialog(commandPair.Key, commandPair.Value);
+                dialog.ShowDialog();
+
+                // Update the key/value pair.
+                object selectedUser = cboxUserSelection.SelectedItem;
+                if ( null != selectedUser )
+                {
+                    (selectedUser as User).CommandDictionary[commandPair.Key] = dialog.CommandValue;
+                }
+
+                // Refresh the list view.
+                RefreshItemControl(lvCommandDictionary);
+            }
+        }
+
+        private void btnAddEntry_Click( object sender, RoutedEventArgs e )
+        {
+            CommandEntryDialog dialog = new CommandEntryDialog();
+            dialog.ShowDialog();
+
+            // Update the key/value pair.
+            object selectedUser = cboxUserSelection.SelectedItem;
+            if ( null != selectedUser )
+            {
+                (selectedUser as User).CommandDictionary[dialog.CommandKey] = dialog.CommandValue;
+            }
+
+            // Refresh the list view.
+            RefreshItemControl(lvCommandDictionary);
+        }
+
+        private void btnDeleteEntry_Click( object sender, RoutedEventArgs e )
+        {
+            // Retrieve the item currently selected in the listview.
+            object selectedItem = lvCommandDictionary.SelectedItem;
+            if ( null != selectedItem )
+            {
+                KeyValuePair<string, string> commandPair = (KeyValuePair<string, string>)selectedItem;
+
+                // Update the key/value pair.
+                object selectedUser = cboxUserSelection.SelectedItem;
+                if ( null != selectedUser )
+                {
+                    (selectedUser as User).CommandDictionary.Remove(commandPair.Key);
+                }
+
+                // Refresh the list view.
+                RefreshItemControl(lvCommandDictionary);
+            }
         }
 
         private void DisplayFrame( object state )
@@ -100,26 +174,23 @@ namespace JarvisEmulator
             }));
         }
 
-        private void BrowseForFile( object sender, RoutedEventArgs e )
+        private void BrowseForFolder( object sender, RoutedEventArgs e )
         {
-            OpenFileDialog dialog = new OpenFileDialog();
+            System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
+            dialog.SelectedPath = tboxTrainingImagesPath.Text;
             dialog.ShowDialog();
 
-            tboxTGitPath.Text = dialog.FileName;
+            tboxTrainingImagesPath.Text = dialog.SelectedPath;
         }
-
-        private void PublishUIData( object sender, RoutedEventArgs e )
-        {
-            UIData packet = new UIData();
-            packet.DrawDetectionRectangles = chkEnableTracking.IsChecked ?? false;
-            packet.HaveJarvisGreetUser = chkGreetUsers.IsChecked ?? false;
-            packet.Users = users.ToList<User>();
-
-            SubscriptionManager.Publish(uiObservers, packet);
-        }
-
 
         #endregion
+
+        // Refresh the list presented in a listview.
+        private void RefreshItemControl(ItemsControl control)
+        {
+            ICollectionView view = CollectionViewSource.GetDefaultView(control.ItemsSource);
+            view.Refresh();
+        }
 
         // Create a new thread to run a function that cannot be run on the same thread invoking CreateNewThread().
         public Thread CreateNewThread( Action<Object> action, object data = null, string name = "" )
@@ -137,21 +208,44 @@ namespace JarvisEmulator
             return l_NewThread;
         }
 
+        #region Observer Patter Requirements
+
         // Update the user interface using information from the Configuration Manager.
         // This should only be called at application initialization.
         public void OnNext( ConfigData value )
         {
-            // Populate the user collection.
-            users = new ObservableCollection<User>(value.Users);
+            if ( value.IsInit )
+            {
+                // Populate the user collection.
+                users = new ObservableCollection<User>(value.Users);
 
-            // Update the user interface.
+                // Update the user interface.
+                chkEnableTracking.IsChecked = value.DrawDetectionRectangles;
+                chkGreetUsers.IsChecked = value.HaveJarvisGreetUser;
+                tboxTrainingImagesPath.Text = value.PathToTrainingImages;
 
-
+                // Refresh listview.
+            }       
         }
 
         public void OnNext( BitmapSource value )
         {
             currentFrame = value;
+        }
+
+        public IDisposable Subscribe( IObserver<UIData> observer )
+        {
+            return SubscriptionManager.Subscribe(uiObservers, observer);
+        }
+
+        private void PublishUIData( object sender = null, RoutedEventArgs e = null )
+        {
+            UIData packet = new UIData();
+            packet.DrawDetectionRectangles = chkEnableTracking.IsChecked ?? false;
+            packet.HaveJarvisGreetUser = chkGreetUsers.IsChecked ?? false;
+            packet.Users = users.ToList<User>();
+
+            SubscriptionManager.Publish(uiObservers, packet);
         }
 
         public void OnError( Exception error )
@@ -164,9 +258,16 @@ namespace JarvisEmulator
             throw new NotImplementedException();
         }
 
-        public IDisposable Subscribe( IObserver<UIData> observer )
+        #endregion
+
+        private void btnTrainUser_Click( object sender, RoutedEventArgs e )
         {
-            return SubscriptionManager.Subscribe(uiObservers, observer);
+
+        }
+
+        private void btnDeleteUser_Click( object sender, RoutedEventArgs e )
+        {
+
         }
     }
 }

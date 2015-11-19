@@ -17,6 +17,26 @@
             <Setter Property="VerticalAlignment" Value="Center" />
             <Setter Property="Margin" Value="3,0,0,0" />
         </Style>
+
+        <Style x:Key="CommandButton" TargetType="Button">
+            <Setter Property="Width" Value="25" />
+            <Setter Property="Height" Value="25" />
+            <!--<Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Button Width="25"
+                                Height="25">
+                        </Button>                                
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>-->
+        </Style>
+
+        <Style x:Key="NormalButton" TargetType="Button">
+            <Setter Property="Margin" Value="10" />
+            <Setter Property="Width" Value="75" />
+            <Setter Property="VerticalAlignment" Value="Bottom" />
+        </Style>
     </Window.Resources>
     
     <Grid>
@@ -43,13 +63,13 @@
                                    Content="Training Images Folder: "
                                    Grid.Column="0"
                                    Grid.Row="0"/>
-                            <TextBox Name="tboxTGitPath"
+                            <TextBox Name="tboxTrainingImagesPath"
                                      Grid.Column="1"
                                      Grid.Row="0"/>
                             <Button Name="btnBrowseForTGit"                                    
                                     Grid.Row="0"
                                     Style="{StaticResource BrowseButtonStyle}"
-                                    Click="BrowseForFile"/>
+                                    Click="BrowseForFolder"/>
 
                             <CheckBox Name="chkGreetUsers"
                                       Content="Have Jarvis Greet Users"
@@ -69,9 +89,71 @@
                             <ComboBox Name="cboxUserSelection"
                                       SelectionChanged="cboxUserSelection_SelectionChanged"/>
 
-                            <Label Content="Command Dictionary"
-                                   Margin="0, 10, 0, 0"/>
-                            <ListView Name="lvCommandDictionary">
+                            <Grid Height="40">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+
+                                <Label Content="Command Dictionary:"
+                                       Margin="0, 10, 0, 0"
+                                       VerticalAlignment="Bottom"
+                                       Grid.Column="0" />
+
+                                <Grid Grid.Column="1"
+                                      Width="100"
+                                      HorizontalAlignment="Right">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition />
+                                        <ColumnDefinition />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    <Button Name="btnDeleteEntry"
+                                            Style="{StaticResource CommandButton}"                                        
+                                            Grid.Column="0"
+                                            Click="btnDeleteEntry_Click">
+                                        <Button.Content>
+                                            <Image>
+                                                <Image.Source>
+                                                    <BitmapImage UriSource="pack://application:,,,/JarvisEmulator;component/Resources/Delete_Icon_256.png"/>
+                                                </Image.Source>
+                                            </Image>
+                                        </Button.Content>
+                                    </Button>
+
+                                    <Button Name="btnAddEntry"
+                                            Style="{StaticResource CommandButton}"                                        
+                                            Grid.Column="1"
+                                            Click="btnAddEntry_Click">
+                                        <Button.Content>
+                                            <Image>
+                                                <Image.Source>
+                                                    <BitmapImage UriSource="pack://application:,,,/JarvisEmulator;component/Resources/Sign_Add_Icon_256.png"/>
+                                                </Image.Source>
+                                            </Image>
+                                        </Button.Content>
+                                    </Button>
+
+                                    <Button Name="btnModifyEntry"
+                                            Style="{StaticResource CommandButton}"                                        
+                                            Grid.Column="2"
+                                            Click="btnModifyEntry_Click">
+                                        <Button.Content>
+                                            <Image>
+                                                <Image.Source>
+                                                    <BitmapImage UriSource="pack://application:,,,/JarvisEmulator;component/Resources/Edit_Icon_256.png"/>
+                                                </Image.Source>
+                                            </Image>
+                                        </Button.Content>
+                                    </Button>
+
+
+                                </Grid>
+                                
+                            </Grid>
+
+                            <ListView Name="lvCommandDictionary"
+                                      ItemsSource="{Binding }">
                                 <ListView.View>
                                     <GridView>
                                         <GridViewColumn Header="Command"
@@ -83,31 +165,42 @@
                                     </GridView>
                                 </ListView.View>
                             </ListView>
-                                      
 
-                            <Label Name="lblRepo"
-                                   Content="None: "
-                                   Grid.Column="0" />
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
 
-                            <TextBox Name="tboxRepoURL"
-                                     Grid.Column="1"/>
+                                <Button Name="btnTrainUser"
+                                    Style="{StaticResource NormalButton}"
+                                    Content="Train User"
+                                    Grid.Column="0"
+                                    Click="btnTrainUser_Click"/>
 
-                            <Button Name="NewUserButton"
+                                <Button Name="NewUserButton"
+                                    Style="{StaticResource NormalButton}"
                                     Content="New User"
-                                    Margin="10"
-                                    Width="75"
-                                    VerticalAlignment="Bottom"
+                                    Grid.Column="1"
                                     Click="NewUserButton_Click"/>
+
+                                <Button Name="btnDeleteUser"
+                                    Style="{StaticResource NormalButton}"
+                                    Content="Delete User"
+                                    Grid.Column="2"
+                                    Click="btnDeleteUser_Click"/>
+
+                            </Grid>
+
 
                         </StackPanel>
 
                     </GroupBox>
                                       
                     <Button Name="SaveButton"
+                            Style="{StaticResource NormalButton}"
                             Content="Save"
-                            Margin="10"
-                            Width="75"
-                            VerticalAlignment="Bottom"
                             Click="SaveButton_Click"/>
 
                 </StackPanel>

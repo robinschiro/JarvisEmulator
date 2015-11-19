@@ -1,0 +1,32 @@
+﻿<Window x:Class="JarvisEmulator.CommandEntryDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:JarvisEmulator"
+        mc:Ignorable="d"
+        Title="Command Entry Dialog" Height="250" Width="300">
+    <StackPanel>
+        <Label Content="Create/Modify Command Entry"
+               HorizontalAlignment="Center"
+               FontSize="16" />
+        
+        <Label Content="Trigger Word:"
+               HorizontalAlignment="Left" />
+        <TextBox Name="tboxCommandKey"
+                 Text="{Binding CommandKey, Mode=TwoWay}"
+                 Margin="0, 0, 0, 20" />
+
+        <Label Content="URL/Path:"
+               HorizontalAlignment="Left" />
+        <TextBox Name="tboxCommandValue"
+                 Text="{Binding CommandValue, Mode=TwoWay}"
+                 Margin="0, 0, 0, 20" />
+        
+        <Button Name="btnOk"
+                Content="Ok"
+                Width="60"
+                Click="btnOk_Click" />
+
+    </StackPanel>
+</Window>

@@ -80,6 +80,10 @@
     <Compile Include="tvToolbox\tvExtensions.cs" />
     <Compile Include="tvToolbox\tvFetchResource.cs" />
     <Compile Include="tvToolbox\tvProfile.cs" />
+    <Page Include="UserInterface\CommandEntryDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="UserInterface\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -89,6 +93,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="FacialRecognition\EigenObjectRecognizer.cs" />
+    <Compile Include="UserInterface\CommandEntryDialog.xaml.cs">
+      <DependentUpon>CommandEntryDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="UserInterface\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
@@ -131,6 +138,11 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Resources\Delete_Icon_256.png" />
+    <Resource Include="Resources\Edit_Icon_256.png" />
+    <Resource Include="Resources\Sign_Add_Icon_256.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

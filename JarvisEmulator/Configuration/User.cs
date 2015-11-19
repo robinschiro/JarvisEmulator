@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,28 +16,16 @@ namespace JarvisEmulator
         private Guid guid;
         public Guid Guid
         {
-            get
-            {
-                return guid;
-            }
-            set
-            {
-                guid = value;
-            }
+            get { return guid; }
+            set { guid = value; }
         }
 
         // Used to map user commands to either a) specfic URLS or b) specific applications.
         private Dictionary<string, string> commandDictionary;
         public Dictionary<string, string> CommandDictionary
         {
-            get
-            {
-                return commandDictionary;
-            }
-            set
-            {
-                commandDictionary = value;
-            }
+            get { return commandDictionary; }
+            set { commandDictionary = value; }
         }
 
         public User( Guid guid, string firstName, string lastName, Dictionary<string, string> commandDictionary )
