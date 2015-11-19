@@ -42,7 +42,10 @@ namespace JarvisEmulator
 
         public void OnNext( ActionData value )
         {
-           url = value.inMessage ;
+          if (value.inMessage.Contains("rss"))
+            {
+                url = value.inMessage;
+            }
         }
 
         public IDisposable Subscribe( IObserver<RSSData> observer )
