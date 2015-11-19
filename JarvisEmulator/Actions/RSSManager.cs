@@ -14,22 +14,19 @@ namespace JarvisEmulator
         public string parsedString;
     }
 
+
     public class RSSManager : IObservable<RSSData>, IObserver<ActionData>
     {
+        string url;
 
         private List<IObserver<RSSData>> RSSObservers = new List<IObserver<RSSData>>();
-
-        //NOT SURE IF THIS WORKS.
-        //NEED TO TAKE A LOOK AT ACTION MANAGER 
-        ActionData url = new ActionData();
-
+    
+   
         private void PublishRSSString()
         {
             RSSData info = new RSSData();
 
-            // NEED A URL PASSED TO parseRss()
-            // HOW TO OBTAIN IT!?!?
-            info.parsedString = parseRss(url.Message);
+            info.parsedString = parseRss(url);
             SubscriptionManager.Publish(RSSObservers, info);
         }
 
@@ -45,12 +42,12 @@ namespace JarvisEmulator
 
         public void OnNext( ActionData value )
         {
-            throw new NotImplementedException();
+           url = value.inMessage ;
         }
 
         public IDisposable Subscribe( IObserver<RSSData> observer )
         {
-            //COME BACK TO THIS
+           
             return SubscriptionManager.Subscribe(RSSObservers, observer);
         }
 
