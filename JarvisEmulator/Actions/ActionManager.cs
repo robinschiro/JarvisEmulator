@@ -31,6 +31,24 @@ namespace JarvisEmulator
             {
                 CommandLogout();
             }
+            if (commandObject.Equals(actionManager.UPDATE))
+            {
+                CommandRSSUpdate();
+            }
+            if (commandObject.Equals(actionManager.OPEN))
+            {
+                //gets the application name
+                command = command.Replace("OK Jarvis open", "");
+                //search through txt doc for the application location/.exe file
+                CommandOpenApplication(command);
+            }
+            if (commandObject.Equals(actionManager.CLOSE))
+            {
+                //gets the application name
+                command = command.Replace("OK Jarvis close", "");
+                //search through txt doc for the application location/.exe file
+                CommandCloseApplication(command);
+            }
         }
 
         public ActionManager()
@@ -80,6 +98,11 @@ namespace JarvisEmulator
                     }
                 }
             }
+        }
+
+        public static void CommandRSSUpdate()
+        {
+
         }
 
 

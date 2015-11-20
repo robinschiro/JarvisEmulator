@@ -26,7 +26,7 @@ namespace JarvisEmulator
         {
             Choices sList = new Choices();
 
-            //change to get dictionary from config
+            //change to get dictionary from config?
 
             string[] greeting = { "hello Jarvis", "hi Jarvis", "howdy Jarvis" };
 
@@ -38,6 +38,7 @@ namespace JarvisEmulator
                 "OK Jarvis take my picture", "OK Jarvis snap", "OK Jarvis cheese", "OK Jarvis selfie"});
 
             sList.Add(new String[] { "OK Jarvis open" + "word" });
+
             try
             {
 
@@ -108,34 +109,6 @@ namespace JarvisEmulator
 
                 EnableListening();
             }
-
-            //for opening applications. this is a test and will later be put into the if statement directly below
-
-
-
-
-            /*    if (command.StartsWith("open"))
-               {
-                   command = command.Replace("open", "");
-
-                   //get words from txt file
-                   if (command == "word")
-                   {
-                       Process proc = new Process();
-                       proc.EnableRaisingEvents = false;
-                       proc.StartInfo.FileName = "winword.exe";
-                       proc.Start();
-
-                       sSynth.Speak("yes sire. I'm opening " + command);
-                       //break;
-                   }
-
-               }*/
-
-
-
-            //    textBox.Text = textBox.Text + " " + e.Result.Text.ToString();
-            //    textBox.Text = textBox.Text + "\n";
 
         }
 
