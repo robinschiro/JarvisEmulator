@@ -736,18 +736,11 @@ namespace tvToolbox
         /// </param>
         public void Add(String asKey, Object aoValue)
         {
-            if ( this.ContainsKey(asKey) )
-            {
-                this[asKey] = aoValue;
-            }
-            else
-            { 
-                DictionaryEntry loEntry = new DictionaryEntry();
-                loEntry.Key = asKey;
-                loEntry.Value = aoValue;
+            DictionaryEntry loEntry = new DictionaryEntry();
+            loEntry.Key = asKey;
+            loEntry.Value = aoValue;
 
-                base.Add(loEntry);
-            }
+            base.Add(loEntry);
         }
 
         /// <summary>
@@ -3105,6 +3098,17 @@ Copy and proceed from there?
 
             if ( !lbAlreadyThere )
                 this.bFileJustCreated = true;
+        }
+
+        public void ClearFileContents()
+        {
+            base.Clear();
+
+            this.UnlockProfileFile();
+
+            File.Create(this.sActualPathFile).Close();
+
+            this.bLockProfileFile(this.sActualPathFile);
         }
 
         /// <summary>

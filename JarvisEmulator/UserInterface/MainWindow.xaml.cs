@@ -1,26 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using Emgu.CV;
-using Emgu.CV.Structure;
-using Emgu.CV.CvEnum;
-using System.Runtime.InteropServices;
-using Microsoft.Win32;
 using System.Threading;
 using System.Windows.Threading;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
+using System.Drawing;
+using Emgu.CV.Structure;
+using Emgu.CV;
 
 namespace JarvisEmulator
 {
@@ -38,11 +30,28 @@ namespace JarvisEmulator
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, INotifyPropertyChanged, IObservable<UIData>, IObserver<BitmapSource>, IObserver<ConfigData>
+    public partial class MainWindow : Window, INotifyPropertyChanged, IObservable<UIData>, IObserver<FrameData>, IObserver<ConfigData>
     {
         private Timer frameTimer;
         private BitmapSource currentFrame;
+        private Image<Gray, byte> facePicture;
         private ObservableCollection<User> users;
+        public ObservableCollection<User> Users
+        {
+            get { return users; }
+            set { users = value; }
+        }
+
+        private User selectedUser;
+        public User SelectedUser
+        {
+            get { return selectedUser; }
+            set
+            {
+                selectedUser = value;
+                NotifyPropertyChanged("SelectedUser");
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -61,9 +70,11 @@ namespace JarvisEmulator
             SubscriptionManager subManager = new SubscriptionManager(this);
 
             // Set the items source of the User Selection dropdown menu.
-            cboxUserSelection.ItemsSource = users;
             cboxUserSelection.SelectedIndex = 0;
             cboxUserSelection_SelectionChanged();
+
+            // Set the data context of various controls.
+            pnlMain.DataContext = this;
 
             // Spawn the timer that populates the video feed with frames.
             frameTimer = new Timer(DisplayFrame, null, 0, 30);
@@ -79,24 +90,13 @@ namespace JarvisEmulator
 
         #region Events
 
-        private void NewUserButton_Click( object sender, RoutedEventArgs e )
-        {
-
-        }
-
-        private void SaveButton_Click( object sender, RoutedEventArgs e )
-        {
-            // Update all subscribers.
-            PublishUIData();
-        }
-
         private void cboxUserSelection_SelectionChanged( object sender = null, SelectionChangedEventArgs e = null)
         {
             // Update the binding of the Commands Listview.
-            User selectedUser = (cboxUserSelection.SelectedItem as User);
-            if ( null != selectedUser )
+            object selectedItem = cboxUserSelection.SelectedItem;
+            if ( null != selectedItem )
             {
-                lvCommandDictionary.ItemsSource = selectedUser.CommandDictionary;
+                SelectedUser = selectedItem as User;
             }           
         }
 
@@ -108,35 +108,37 @@ namespace JarvisEmulator
             { 
                 KeyValuePair<string, string> commandPair = (KeyValuePair<string, string>)selectedItem;
 
-                CommandEntryDialog dialog = new CommandEntryDialog(commandPair.Key, commandPair.Value);
+                TwoEntryDialog dialog = new TwoEntryDialog("Modify Command Entry", "Trigger Word:", "URL/Path:", commandPair.Key, commandPair.Value);
                 dialog.ShowDialog();
 
-                // Update the key/value pair.
-                object selectedUser = cboxUserSelection.SelectedItem;
-                if ( null != selectedUser )
-                {
-                    (selectedUser as User).CommandDictionary[commandPair.Key] = dialog.CommandValue;
+                if ( true == dialog.Result )
+                { 
+                    // Update the key/value pair.
+                    object selectedUser = cboxUserSelection.SelectedItem;
+                    if ( null != selectedUser )
+                    {
+                        User user = (selectedUser as User);
+                        user.CommandDictionary.Remove(commandPair.Key);
+                        user.CommandDictionary[dialog.EntryOne] = dialog.EntryTwo;
+                    }
                 }
-
-                // Refresh the list view.
-                RefreshItemControl(lvCommandDictionary);
             }
         }
 
         private void btnAddEntry_Click( object sender, RoutedEventArgs e )
         {
-            CommandEntryDialog dialog = new CommandEntryDialog();
+            TwoEntryDialog dialog = new TwoEntryDialog("Add Command Entry", "Trigger Word:", "URL/Path:");
             dialog.ShowDialog();
 
-            // Update the key/value pair.
-            object selectedUser = cboxUserSelection.SelectedItem;
-            if ( null != selectedUser )
+            // Create the key/value pair.
+            if ( true == dialog.Result )
             {
-                (selectedUser as User).CommandDictionary[dialog.CommandKey] = dialog.CommandValue;
+                object selectedUser = cboxUserSelection.SelectedItem;
+                if ( null != selectedUser )
+                {
+                    (selectedUser as User).CommandDictionary[dialog.EntryOne] = dialog.EntryTwo;
+                }
             }
-
-            // Refresh the list view.
-            RefreshItemControl(lvCommandDictionary);
         }
 
         private void btnDeleteEntry_Click( object sender, RoutedEventArgs e )
@@ -153,9 +155,154 @@ namespace JarvisEmulator
                 {
                     (selectedUser as User).CommandDictionary.Remove(commandPair.Key);
                 }
+            }
+        }
 
-                // Refresh the list view.
-                RefreshItemControl(lvCommandDictionary);
+        private void btnTrainUser_Click( object sender, RoutedEventArgs e )
+        {
+            // Send the user to the Video Feed tab and lock him in there until he clicks "Finish".
+            if ( MessageBoxResult.Yes == MessageBox.Show("You will now be taken to the Video Feed tab to take pictures of the selected user's face. " +
+                                                         "Are you sure you want to do this?", "Training Mode", MessageBoxButton.YesNo, MessageBoxImage.Information) )
+            {
+                // TODO: Handle exception for invalid directory.
+                // Create user training folder if it does not already exist.
+                string pathUserTrainingFolder = Path.Combine(tboxTrainingImagesPath.Text, selectedUser.Guid.ToString());
+                if ( !Directory.Exists( pathUserTrainingFolder ) )
+                {
+                    Directory.CreateDirectory(pathUserTrainingFolder);
+                }
+
+                ToggleTrainingMode(true);
+            }
+        }
+
+        private void btnDeleteUser_Click( object sender, RoutedEventArgs e )
+        {
+            if ( MessageBoxResult.Yes == MessageBox.Show("Are you sure you want to delete the selected user?", "Delete User", MessageBoxButton.YesNo, MessageBoxImage.Question) )
+            {
+                // Remove the user from the collection.
+                users.Remove(SelectedUser);
+
+                // Update the combobox.
+                cboxUserSelection.SelectedIndex = 0;
+
+                // Update the public property.
+                object selectedItem = cboxUserSelection.SelectedItem;
+                SelectedUser = (null != selectedItem) ? (selectedItem as User) : null;
+            }
+        }
+
+        private void btnNewUser_Click( object sender, RoutedEventArgs e )
+        {
+            TwoEntryDialog dialog = new TwoEntryDialog("Create User", "First Name:", "Last Name:");
+            dialog.ShowDialog();
+
+            if ( true == dialog.Result )
+            {
+                // Add the new user to the collection of users.
+                User newUser = new User(Guid.NewGuid(), dialog.EntryOne, dialog.EntryTwo, new ObservableDictionary<string, string>());
+                users.Add(newUser);
+
+                // Make this user the currently selected user.
+                cboxUserSelection.SelectedItem = newUser;
+            }
+        }
+
+        private void SaveButton_Click( object sender, RoutedEventArgs e )
+        {
+            // Update all subscribers.
+            PublishUIData(true);
+        }
+
+        private void chkEnableTracking_Click( object sender, RoutedEventArgs e )
+        {
+            PublishUIData();
+        }
+
+        private void btnBrowse_Click( object sender, RoutedEventArgs e )
+        {
+            System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
+            dialog.SelectedPath = tboxTrainingImagesPath.Text;
+            dialog.ShowDialog();
+
+            tboxTrainingImagesPath.Text = dialog.SelectedPath;
+        }
+
+        private void btnSnapshot_Click( object sender, RoutedEventArgs e )
+        {
+            string pathUserTrainingFolder = Path.Combine(tboxTrainingImagesPath.Text, selectedUser.Guid.ToString());
+            string fileName = String.Empty;
+
+            // Retrieve the name of the latest picture to be saved in this folder.
+            // The new file name should be incremented by one.
+            List<FileInfo> files = (new DirectoryInfo(pathUserTrainingFolder)).GetFiles().ToList<FileInfo>();
+            if ( 0 == files.Count )
+            {
+                fileName = "1";
+            }
+            else
+            {
+                try
+                {
+                    List<int> fileNameInts = fileNameInts = files.Select(file => Convert.ToInt32(Path.GetFileNameWithoutExtension(file.Name))).ToList();
+                    fileName = (fileNameInts.Max() + 1) + ".bmp";
+                }
+                catch
+                {
+                    MessageBox.Show("Training images folder has invalid files. Please clear this directory or select a new one.");
+                }
+            }
+
+            // Store a picture of the face that is contained within the first rectangle of the rectangle list.
+            if ( null != facePicture )
+            {
+                facePicture.Save(Path.Combine(pathUserTrainingFolder, fileName));
+            }
+
+        }
+
+        private void btnFinish_Click( object sender, RoutedEventArgs e )
+        {
+            ToggleTrainingMode(false);
+        }
+
+        private void Window_Closing( object sender, CancelEventArgs e )
+        {
+            PromptForSave();
+        }
+
+
+        #endregion
+
+        private void ToggleTrainingMode( bool on )
+        {
+            tabConfig.IsSelected = !on;
+            tabConfig.IsEnabled = !on;
+            tabVideoFeed.IsSelected = on;
+            gridTrainingButtons.Visibility = on ? Visibility.Visible : Visibility.Hidden;
+
+            string message = "";
+            if ( on )
+            {
+                message = "You are now in Training Mode. The Selected User should pose in front of the webcam " +
+                          "at various angles and perhaps in various lighting conditions. For each pose, click the '" +
+                          btnSnapshot.Content + "' button. When you are finished, press the '" + btnFinish.Content + "' button.";
+            }
+            else
+            {
+                message = "You are leaving Training Mode.";
+            }
+
+            MessageBox.Show(message, "Training Mode");
+        }
+
+        // Refresh the list presented in a listview.
+        private void RefreshItemControl(ItemsControl control)
+        {
+            if ( null != control.ItemsSource )
+            {
+                ICollectionView view = CollectionViewSource.GetDefaultView(control.ItemsSource);
+                view.Refresh();
             }
         }
 
@@ -174,26 +321,9 @@ namespace JarvisEmulator
             }));
         }
 
-        private void BrowseForFolder( object sender, RoutedEventArgs e )
-        {
-            System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
-            dialog.SelectedPath = tboxTrainingImagesPath.Text;
-            dialog.ShowDialog();
-
-            tboxTrainingImagesPath.Text = dialog.SelectedPath;
-        }
-
-        #endregion
-
-        // Refresh the list presented in a listview.
-        private void RefreshItemControl(ItemsControl control)
-        {
-            ICollectionView view = CollectionViewSource.GetDefaultView(control.ItemsSource);
-            view.Refresh();
-        }
 
         // Create a new thread to run a function that cannot be run on the same thread invoking CreateNewThread().
-        public Thread CreateNewThread( Action<Object> action, object data = null, string name = "" )
+        public Thread CreateNewThread( Action<object> action, object data = null, string name = "" )
         {
             ThreadStart l_Start = delegate () { Dispatcher.Invoke(DispatcherPriority.Normal, action, data); };
             Thread l_NewThread = new Thread(l_Start);
@@ -206,6 +336,14 @@ namespace JarvisEmulator
             l_NewThread.Start();
 
             return l_NewThread;
+        }
+
+        private void PromptForSave()
+        {
+            if ( MessageBoxResult.Yes == System.Windows.MessageBox.Show("Would you like to save your changes?", "Save Changes?", MessageBoxButton.YesNo) )
+            {
+                PublishUIData(true);
+            }
         }
 
         #region Observer Patter Requirements
@@ -228,9 +366,10 @@ namespace JarvisEmulator
             }       
         }
 
-        public void OnNext( BitmapSource value )
+        public void OnNext( FrameData value )
         {
-            currentFrame = value;
+            currentFrame = value.Frame;
+            facePicture = value.Face;
         }
 
         public IDisposable Subscribe( IObserver<UIData> observer )
@@ -238,12 +377,14 @@ namespace JarvisEmulator
             return SubscriptionManager.Subscribe(uiObservers, observer);
         }
 
-        private void PublishUIData( object sender = null, RoutedEventArgs e = null )
+        private void PublishUIData( bool saveToProfile = false )
         {
             UIData packet = new UIData();
             packet.DrawDetectionRectangles = chkEnableTracking.IsChecked ?? false;
             packet.HaveJarvisGreetUser = chkGreetUsers.IsChecked ?? false;
+            packet.PathToTrainingImages = tboxTrainingImagesPath.Text;
             packet.Users = users.ToList<User>();
+            packet.SaveToProfile = saveToProfile;
 
             SubscriptionManager.Publish(uiObservers, packet);
         }
@@ -259,15 +400,5 @@ namespace JarvisEmulator
         }
 
         #endregion
-
-        private void btnTrainUser_Click( object sender, RoutedEventArgs e )
-        {
-
-        }
-
-        private void btnDeleteUser_Click( object sender, RoutedEventArgs e )
-        {
-
-        }
     }
 }

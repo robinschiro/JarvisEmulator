@@ -52,7 +52,7 @@ namespace JarvisEmulator
 
             // Create subscriptions to the ConfigurationManager.
             configManager.Subscribe(userInterface);
-
+            configManager.Subscribe(faceDetector);
             configManager.Subscribe(speechRecognizer);
 
             // TODO: Create subscriptions to the ActionManager from the Speech Constructor

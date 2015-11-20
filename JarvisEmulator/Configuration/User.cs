@@ -10,7 +10,18 @@ namespace JarvisEmulator
     public class User
     {
         private string firstName;
+        public string FirstName
+        {
+            get { return firstName; }
+            set { firstName = value; }
+        }
+
         private string lastName;
+        public string LastName
+        {
+            get { return lastName; }
+            set { lastName = value; }
+        }
 
         // Used to uniquely identify the user.
         private Guid guid;
@@ -21,14 +32,14 @@ namespace JarvisEmulator
         }
 
         // Used to map user commands to either a) specfic URLS or b) specific applications.
-        private Dictionary<string, string> commandDictionary;
-        public Dictionary<string, string> CommandDictionary
+        private ObservableDictionary<string, string> commandDictionary;
+        public ObservableDictionary<string, string> CommandDictionary
         {
             get { return commandDictionary; }
             set { commandDictionary = value; }
         }
 
-        public User( Guid guid, string firstName, string lastName, Dictionary<string, string> commandDictionary )
+        public User( Guid guid, string firstName, string lastName, ObservableDictionary<string, string> commandDictionary )
         {
             this.guid = guid;
             this.firstName = firstName;

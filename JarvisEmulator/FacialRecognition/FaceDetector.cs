@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define USE_MULTITHREADING
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,30 +14,33 @@ using System.Windows;
 using System.Windows.Media;
 using System.Drawing;
 using System.Collections.Concurrent;
+using System.Runtime.ExceptionServices;
 
 namespace JarvisEmulator
 {
-    public class FaceDetector : IObservable<User>, IObservable<BitmapSource>, IObserver<UIData>, IObserver<ConfigData>
+
+    public struct FrameData
+    {
+        public BitmapSource Frame;
+        public Image<Gray, byte> Face;
+    }
+
+    public class FaceDetector : IObservable<User>, IObservable<FrameData>, IObserver<UIData>, IObserver<ConfigData>
     {
         #region Private Variables
 
         private Image<Bgr, Byte> currentFrame;
         private Capture grabber;
         private HaarCascade face;
-        private HaarCascade eye;
         private MCvFont font = new MCvFont(FONT.CV_FONT_HERSHEY_TRIPLEX, 0.5d, 0.5d);
-        private Image<Gray, byte> result, TrainedFace = null;
         private Image<Gray, byte> gray = null;
         private List<Image<Gray, byte>> trainingImages = new List<Image<Gray, byte>>();
-        private List<string> labels = new List<string>();
-        private List<string> NamePersons = new List<string>();
-        private List<User> users;
-        private int ContTrain, NumLabels, t;
-        private string name, names = null;
+
         private MCvAvgComp[][] facesDetected;
-        private volatile List<Rectangle> faceRectangles = new List<Rectangle>();
         private ConcurrentBag<Rectangle> faceRectangleBag = new ConcurrentBag<Rectangle>();
         private bool drawDetectionRectangles = false;
+        private List<User> users;
+
 
         private System.Threading.Timer frameTimer;
         private System.Threading.Timer detectionTimer;
@@ -43,7 +48,7 @@ namespace JarvisEmulator
         #region Observer Lists
 
         private List<IObserver<User>> userObservers = new List<IObserver<User>>();
-        private List<IObserver<BitmapSource>> frameObservers = new List<IObserver<BitmapSource>>();
+        private List<IObserver<FrameData>> frameObservers = new List<IObserver<FrameData>>();
 
         #endregion
 
@@ -62,10 +67,12 @@ namespace JarvisEmulator
         public void EnableFrameCapturing()
         {
             // Spawn the timer that populates the video feed with frames.
-            frameTimer = new System.Threading.Timer(GetCurrentFrame, null, 0, 30);
+            frameTimer = new System.Threading.Timer(GetCurrentFrame, null, 0, 100);
 
+#if USE_MULTITHREADING
             // Spawn the timer that performs the detection.
             detectionTimer = new System.Threading.Timer(DetectFaces, null, 0, 100);
+#endif
         }
 
         // Initialize face detection.
@@ -82,14 +89,15 @@ namespace JarvisEmulator
             catch ( Exception ex ) { }
         }
 
-        private void DetectFaces( object state )
+        [HandleProcessCorruptedStateExceptions]
+        private void DetectFaces( object state = null )
         {
             if ( null != currentFrame )
             {
                 // Convert it to grayscale
                 gray = currentFrame.Convert<Gray, Byte>();
 
-                // Create an array of detected faces.
+                // Create an array of detected faces.                
                 try
                 {
                     facesDetected = gray.DetectHaarCascade(face, 1.2, 10, Emgu.CV.CvEnum.HAAR_DETECTION_TYPE.DO_CANNY_PRUNING, new System.Drawing.Size(20, 20));
@@ -111,6 +119,11 @@ namespace JarvisEmulator
             // Get the current frame from capture device
             grabber.QueryFrame();
             currentFrame = grabber.QueryFrame().Resize(320, 240, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
+            Image<Gray, byte> result = null;
+
+#if !USE_MULTITHREADING
+            DetectFaces();
+#endif
 
             // Process the frame in order to detect faces.
             if ( null != faceRectangleBag )
@@ -119,7 +132,7 @@ namespace JarvisEmulator
                 // TODO: Collecition is modifed mid-enumeration. Need to fix.
                 foreach ( Rectangle rect in faceRectangleBag )
                 {
-                    //result = currentFrame.Copy(f.rect).Convert<Gray, byte>().Resize(100, 100, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
+                    result = currentFrame.Copy(rect).Convert<Gray, byte>().Resize(100, 100, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
 
                     // Draw a rectangle around each detected face.
                     if ( drawDetectionRectangles )
@@ -133,8 +146,13 @@ namespace JarvisEmulator
             BitmapSource frameBitmap = ToBitmapSource(currentFrame);
             frameBitmap.Freeze();
 
+            // Create a frame data packet.
+            FrameData packet = new FrameData();
+            packet.Frame = frameBitmap;
+            packet.Face = result;
+
             // Send the frame to all frame observers.
-            SubscriptionManager.Publish(frameObservers, frameBitmap);
+            SubscriptionManager.Publish(frameObservers, packet);
         }
 
         // Convert a bitmap image to a BitmapSource, which WPF can use to display the image.
@@ -161,7 +179,7 @@ namespace JarvisEmulator
             return SubscriptionManager.Subscribe(userObservers, observer);
         }
 
-        public IDisposable Subscribe( IObserver<BitmapSource> observer )
+        public IDisposable Subscribe( IObserver<FrameData> observer )
         {
             return SubscriptionManager.Subscribe(frameObservers, observer);
         }
@@ -183,7 +201,8 @@ namespace JarvisEmulator
 
         public void OnNext( ConfigData value )
         {
-            throw new NotImplementedException();
+            users = value.Users;
+            drawDetectionRectangles = value.DrawDetectionRectangles;
         }
     }
 }
