@@ -19,53 +19,33 @@ namespace JarvisEmulator
         List<Word> words = new List<Word>();
         User ActiveUser;
 
+        String command = "";
+
+
         public SpeechRecognizer()
         {
-
-        }
-
-        public void EnableListening()
-        {
-
-        }
-
-        private void button2_Click(object sender, RoutedEventArgs e)
-        {
-            //  button2.IsEnabled = false;
-            //   button3.IsEnabled = true;
             Choices sList = new Choices();
 
-            //put these in a text file
-            string[] frFile = File.ReadAllLines(Environment.CurrentDirectory + "\\actions.txt");
+            //change to get dictionary from config
 
-            sList.Add(new string[] { "hello","hello Jarvis", "hi","hi Jarvis","howdy Jarvis","howdy", "ola", "ola Jarvis",
-                "OK Jarvis","OK Jarvis goodbye","OK Jarvis bye","OK Jarvis exit", "OK Jarvis see you later",
-                "OK Jarvis log out", "OK Jarvis open", "OK Jarvis close", "word",
-                "OK Jarvis take my picture", "OK Jarvis take my photo", "OK Jarvis cheese", "OK Jarvis take my selfie"});
+            string[] greeting = { "hello Jarvis", "hi Jarvis", "howdy Jarvis" };
+
+            sList.Add(new string[] { "hello Jarvis", "hi Jarvis","howdy Jarvis",
+                "OK Jarvis", "goodbye","bye","exit","see you later",
+                "OK Jarvis goodbye","OK Jarvis bye","OK Jarvis exit", "OK Jarvis see you later",
+                "OK Jarvis log out", "OK Jarvis open", "OK Jarvis close",
+                "OK Jarvis update",
+                "OK Jarvis take my picture", "OK Jarvis snap", "OK Jarvis cheese", "OK Jarvis selfie"});
+
+            sList.Add(new String[] { "OK Jarvis open" + "word" });
             try
             {
-                foreach (string line in frFile)
-                {
-                    if (line.StartsWith("--") || line == String.Empty) continue;
-
-                    var parts = line.Split(new char[] { '|' });
-
-                    // add commandItem to the list for later lookup or execution
-                    words.Add(new Word() { Text = parts[0], AttachedText = parts[1], IsShellCommand = (parts[2] == "true") });
-
-                    // add the text to the known choices of speechengine
-                    sList.Add(parts[0]);
-
-                }
 
                 Grammar gr = new Grammar(new GrammarBuilder(sList));
 
                 sRecognize.RequestRecognizerUpdate();
                 sRecognize.LoadGrammar(gr);
 
-                //DictationGrammar dict = new DictationGrammar();// not that great -
-
-                //sRecognize.LoadGrammar(dict);//gr or dict
                 sRecognize.SpeechRecognized += SRecognize_SpeechRecognized;
                 sRecognize.SetInputToDefaultAudioDevice();
                 sRecognize.RecognizeAsync(RecognizeMode.Multiple);
@@ -77,107 +57,82 @@ namespace JarvisEmulator
             }
         }
 
+
+        public void EnableListening()
+        {
+            // string command = e.Result.Text;
+            object commandObject = "";
+            if (command.StartsWith("OK Jarvis"))
+            {
+                if (command.Contains("open"))
+                {
+                    commandObject = actionManager.OPEN;
+                }
+                if (command.Contains("log out"))
+                {
+                    commandObject = actionManager.LOGOUT;
+                }
+                if (command.Contains("close"))
+                {
+                    commandObject = actionManager.CLOSE;
+                }
+                if (command.Contains("update"))
+                {
+                    commandObject = actionManager.UPDATE;
+                }
+                if (command.Contains("take my picture") || command.Contains("snap") ||
+                    command.Contains("cheese") || command.Contains("selfie"))
+                {
+                    commandObject = actionManager.TAKEPICTURE;
+                }
+
+            }
+            ActionManager.ProcessCommand(command, commandObject);
+
+        }
+
+
         private void SRecognize_SpeechRecognized(object sender, SpeechRecognizedEventArgs e)
         {
-            string command = e.Result.Text;
+            command = e.Result.Text;
             Random random = new Random();
             int randomNumber = random.Next(0, 6);
 
-
-            if (command.ToLower() == "hello" || command.ToLower() == "hello jarvis" || command.ToLower() == "hi" || command.ToLower() == "hi jarvis" ||
-                command.ToLower() == "howdy" || command.ToLower() == "ola" || command.ToLower() == "howdy jarvis")
+            if (command.StartsWith("hi Jarvis"))
             {
-                //will be replaced with call to speech constructor
-                sSynth.Speak("Hello");
-
+                sSynth.Speak("Hello my lord sire sir, the most attractive entity in all the universe. i'm surprised the universe hasn't imploded by your gravitational pull");
             }
-
-            //for opening applications. this is a test and will later be put into the if statement directly below
-            if (command.StartsWith("OK Jarvis open"))
-            {
-                command = command.Replace("OK Jarvis open", "");
-
-                //get words from txt file
-                if (command == "word")
-                {
-                    Process proc = new Process();
-                    proc.EnableRaisingEvents = false;
-                    proc.StartInfo.FileName = "winword.exe";
-                    proc.Start();
-
-                    sSynth.Speak("yes sire. I'm opening " + command);
-                    //break;
-                }
-
-            }
-
-            if (command.StartsWith("OK Jarvis close"))
-            {
-                sSynth.Speak("alrighty, closing");
-                System.Diagnostics.Process[] procs = null;
-                try
-                {
-                    procs = Process.GetProcessesByName("winword");
-
-                    Process close = procs[0];
-
-                    if (!close.HasExited)
-                    {
-                        close.Kill();
-                    }
-                }
-                finally
-                {
-                    if (procs != null)
-                    {
-                        foreach (Process p in procs)
-                        {
-                            p.Dispose();
-                        }
-                    }
-                }
-            }
-
 
             if (command.StartsWith("OK Jarvis"))
             {
-                command = command.Replace("OK Jarvis ", "");
-                if (command.ToLower() == "goodbye" || command.ToLower() == "goodbye" || command.ToLower() == "bye")
-                {
-                    //will be replaced with call to speech constructor
-                    if (randomNumber == 1)
-                        sSynth.Speak("goodbye");
-                    else if (randomNumber == 2)
-                        sSynth.Speak("see you later, crocodile");
-                    else if (randomNumber == 3)
-                        sSynth.Speak("bye");
-                    else if (randomNumber == 4)
-                        sSynth.Speak("adios");
-                    else if (randomNumber == 5)
-                        sSynth.Speak("parting is of such sweet sorrow");
-                    else
-                    {
-                        sSynth.Speak("take care, smiley face");
 
-                    }
-                    //Close();
-
-                }
-
-                if (command.ToLower() == "log out")
-                {
-                    //will be replaced with call to speech constructor
-                    sSynth.Speak("yes my lord, i hope that you have saved all your work because it is too late now");
-                    ActionManager.CommandLogout();
-
-                }
-
-                if (command.ToLower() == "take my picture")
-                {
-
-                }
-
+                EnableListening();
             }
+
+            //for opening applications. this is a test and will later be put into the if statement directly below
+
+
+
+
+            /*    if (command.StartsWith("open"))
+               {
+                   command = command.Replace("open", "");
+
+                   //get words from txt file
+                   if (command == "word")
+                   {
+                       Process proc = new Process();
+                       proc.EnableRaisingEvents = false;
+                       proc.StartInfo.FileName = "winword.exe";
+                       proc.Start();
+
+                       sSynth.Speak("yes sire. I'm opening " + command);
+                       //break;
+                   }
+
+               }*/
+
+
 
             //    textBox.Text = textBox.Text + " " + e.Result.Text.ToString();
             //    textBox.Text = textBox.Text + "\n";

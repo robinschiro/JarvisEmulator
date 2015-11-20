@@ -12,9 +12,26 @@ namespace JarvisEmulator
         public string outMessage;
     }
 
+    public enum actionManager
+    {
+        OPEN,
+        UPDATE,
+        CLOSE,
+        LOGOUT,
+        TAKEPICTURE
+    }
+
     public class ActionManager : IObservable<ActionData>
     {
         RSSManager rssManager;
+
+        public static void ProcessCommand(String command, object commandObject)
+        {
+            if (commandObject.Equals(actionManager.LOGOUT))
+            {
+                CommandLogout();
+            }
+        }
 
         public ActionManager()
         {
