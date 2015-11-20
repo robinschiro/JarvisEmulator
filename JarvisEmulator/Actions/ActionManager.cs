@@ -24,33 +24,7 @@ namespace JarvisEmulator
     public class ActionManager : IObservable<ActionData>
     {
         RSSManager rssManager;
-
-        public static void ProcessCommand(String command, object commandObject)
-        {
-            if (commandObject.Equals(actionManager.LOGOUT))
-            {
-                CommandLogout();
-            }
-            if (commandObject.Equals(actionManager.UPDATE))
-            {
-                CommandRSSUpdate();
-            }
-            if (commandObject.Equals(actionManager.OPEN))
-            {
-                //gets the application name
-                command = command.Replace("OK Jarvis open", "");
-                //search through txt doc for the application location/.exe file
-                CommandOpenApplication(command);
-            }
-            if (commandObject.Equals(actionManager.CLOSE))
-            {
-                //gets the application name
-                command = command.Replace("OK Jarvis close", "");
-                //search through txt doc for the application location/.exe file
-                CommandCloseApplication(command);
-            }
-        }
-
+        
         public ActionManager()
         {
             rssManager = new RSSManager();
@@ -59,11 +33,6 @@ namespace JarvisEmulator
         public IDisposable Subscribe(IObserver<ActionData> observer)
         {
             return null;
-        }
-
-        public static void CommandLogout()
-        {
-            System.Diagnostics.Process.Start("shutdown", "-l");
         }
 
         public static void CommandOpenApplication(String app)
@@ -100,11 +69,60 @@ namespace JarvisEmulator
             }
         }
 
+        public static void CommandLogout()
+        {
+            System.Diagnostics.Process.Start("shutdown", "-l");
+        }
+
+        public static void CommandTakePhoto()
+        {
+
+        }
+
         public static void CommandRSSUpdate()
         {
 
         }
 
+        public static void CommandQuestionAsked()
+        {
+
+        }
+        public static void Obtain()
+        {
+
+        }
+
+        public static void ProcessCommand(String command, object commandObject)
+        {
+            if (commandObject.Equals(actionManager.LOGOUT))
+            {
+                CommandLogout();
+            }
+            if (commandObject.Equals(actionManager.UPDATE))
+            {
+                CommandRSSUpdate();
+            }
+            if (commandObject.Equals(actionManager.OPEN))
+            {
+                //gets the application name
+                command = command.Replace("OK Jarvis open", "");
+                //search through txt doc for the application location/.exe file
+                CommandOpenApplication(command);
+            }
+            if (commandObject.Equals(actionManager.CLOSE))
+            {
+                //gets the application name
+                command = command.Replace("OK Jarvis close", "");
+                //search through txt doc for the application location/.exe file
+                CommandCloseApplication(command);
+            }
+        }
+
+        public void DisplayError()
+        {
+
+        }
 
     }
 }
