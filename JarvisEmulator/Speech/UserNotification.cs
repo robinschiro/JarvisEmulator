@@ -2,7 +2,7 @@
 {
     public enum NOTIFICATION_TYPE
     {
-        RSS_DATA, WARNING, ERROR, USER_ENTERED
+        RSS_DATA, WARNING, ERROR, USER_ENTERED, OPENING_APPLICATION, CLOSING_APPLICATION, LOG_OUT
     };
 
     public class UserNotification
