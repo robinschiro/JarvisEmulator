@@ -12,7 +12,7 @@ namespace JarvisEmulator
         public string outMessage;
     }
 
-    public enum actionManager
+    public enum actionManagerCommands
     {
         OPEN,
         UPDATE,
@@ -21,10 +21,13 @@ namespace JarvisEmulator
         TAKEPICTURE
     }
 
-    public class ActionManager : IObservable<ActionData>
+    public class ActionManager : IObservable<ActionData>, IObserver<SpeechData>
     {
         RSSManager rssManager;
-        
+        string command;
+        object commandObject;
+
+
         public ActionManager()
         {
             rssManager = new RSSManager();
@@ -35,7 +38,7 @@ namespace JarvisEmulator
             return null;
         }
 
-        public static void CommandOpenApplication(String app)
+        public void CommandOpenApplication(String app)
         {
             System.Diagnostics.Process proc = new System.Diagnostics.Process();
             proc.EnableRaisingEvents = false;
@@ -43,7 +46,7 @@ namespace JarvisEmulator
             proc.Start();
         }
 
-        public static void CommandCloseApplication(String app)
+        public void CommandCloseApplication(String app)
         {
             System.Diagnostics.Process[] procs = null;
             try
@@ -69,48 +72,48 @@ namespace JarvisEmulator
             }
         }
 
-        public static void CommandLogout()
+        public void CommandLogout()
         {
             System.Diagnostics.Process.Start("shutdown", "-l");
         }
 
-        public static void CommandTakePhoto()
+        public void CommandTakePhoto()
         {
 
         }
 
-        public static void CommandRSSUpdate()
+        public void CommandRSSUpdate()
         {
 
         }
 
-        public static void CommandQuestionAsked()
+        public void CommandQuestionAsked()
         {
 
         }
-        public static void Obtain()
+        public void Obtain()
         {
 
         }
 
-        public static void ProcessCommand(String command, object commandObject)
+        public void ProcessCommand()
         {
-            if (commandObject.Equals(actionManager.LOGOUT))
+            if (commandObject.Equals(actionManagerCommands.LOGOUT))
             {
                 CommandLogout();
             }
-            if (commandObject.Equals(actionManager.UPDATE))
+            if (commandObject.Equals(actionManagerCommands.UPDATE))
             {
                 CommandRSSUpdate();
             }
-            if (commandObject.Equals(actionManager.OPEN))
+            if (commandObject.Equals(actionManagerCommands.OPEN))
             {
                 //gets the application name
                 command = command.Replace("OK Jarvis open", "");
                 //search through txt doc for the application location/.exe file
                 CommandOpenApplication(command);
             }
-            if (commandObject.Equals(actionManager.CLOSE))
+            if (commandObject.Equals(actionManagerCommands.CLOSE))
             {
                 //gets the application name
                 command = command.Replace("OK Jarvis close", "");
@@ -124,5 +127,20 @@ namespace JarvisEmulator
 
         }
 
+        public void OnNext(SpeechData value)
+        {
+            command = value.command;
+            commandObject = value.commandObject;
+        }
+
+        public void OnError(Exception error)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void OnCompleted()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

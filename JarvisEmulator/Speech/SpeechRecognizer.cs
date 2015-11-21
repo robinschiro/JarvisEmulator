@@ -11,7 +11,16 @@ using System.Windows;
 
 namespace JarvisEmulator
 {
-    public class SpeechRecognizer : IObserver<ConfigData>
+
+    public struct SpeechData
+    {
+        public string command;
+        public object commandObject;
+    }
+
+   
+
+    public class SpeechRecognizer : IObserver<ConfigData>, IObservable<SpeechData>
     {
         SpeechSynthesizer sSynth = new SpeechSynthesizer();
         PromptBuilder pBuilder = new PromptBuilder();
@@ -20,14 +29,14 @@ namespace JarvisEmulator
         User ActiveUser;
 
         String command = "";
+        object commandObject ;
 
+        private List<IObserver<SpeechData>> commandObserver = new List<IObserver<SpeechData>>();
 
         public SpeechRecognizer()
         {
             Choices sList = new Choices();
-
-            //change to get dictionary from config?
-
+            
             string[] greeting = { "hello Jarvis", "hi Jarvis", "howdy Jarvis" };
 
             sList.Add(new string[] { "hello Jarvis", "hi Jarvis","howdy Jarvis",
@@ -36,7 +45,7 @@ namespace JarvisEmulator
                 "OK Jarvis log out", "OK Jarvis open", "OK Jarvis close",
                 "OK Jarvis update",
                 "OK Jarvis take my picture", "OK Jarvis snap", "OK Jarvis cheese", "OK Jarvis selfie"});
-
+            //string[] key = ActiveUser.CommandDictionary.;
             sList.Add(new String[] { "OK Jarvis open" + "word" });
 
             try
@@ -62,34 +71,34 @@ namespace JarvisEmulator
         public void EnableListening()
         {
             // string command = e.Result.Text;
-            object commandObject = "";
+            
             if (command.StartsWith("OK Jarvis"))
             {
                 if (command.Contains("open"))
                 {
-                    commandObject = actionManager.OPEN;
+                    commandObject = actionManagerCommands.OPEN;
                 }
                 if (command.Contains("log out"))
                 {
-                    commandObject = actionManager.LOGOUT;
+                    commandObject = actionManagerCommands.LOGOUT;
                 }
                 if (command.Contains("close"))
                 {
-                    commandObject = actionManager.CLOSE;
+                    commandObject = actionManagerCommands.CLOSE;
                 }
                 if (command.Contains("update"))
                 {
-                    commandObject = actionManager.UPDATE;
+                    commandObject = actionManagerCommands.UPDATE;
                 }
                 if (command.Contains("take my picture") || command.Contains("snap") ||
                     command.Contains("cheese") || command.Contains("selfie"))
                 {
-                    commandObject = actionManager.TAKEPICTURE;
+                    commandObject = actionManagerCommands.TAKEPICTURE;
                 }
 
             }
-            ActionManager.ProcessCommand(command, commandObject);
-
+            //ActionManager.ProcessCommand(command, commandObject);
+            PublishSpeechData();
         }
 
 
@@ -101,15 +110,29 @@ namespace JarvisEmulator
 
             if (command.StartsWith("hi Jarvis"))
             {
-                sSynth.Speak("Hello my lord sire sir, the most attractive entity in all the universe. i'm surprised the universe hasn't imploded by your gravitational pull");
+                sSynth.Speak("Hello");
             }
 
             if (command.StartsWith("OK Jarvis"))
             {
-
                 EnableListening();
             }
 
+        }
+
+
+        public IDisposable Subscribe(IObserver<SpeechData> observer)
+        {
+            return SubscriptionManager.Subscribe(commandObserver, observer);
+        }
+
+        private void PublishSpeechData()
+        {
+            SpeechData packet = new SpeechData();
+            packet.command= command;
+            packet.commandObject = commandObject;
+
+            SubscriptionManager.Publish(commandObserver, packet);
         }
 
         public void OnNext(ConfigData user)
