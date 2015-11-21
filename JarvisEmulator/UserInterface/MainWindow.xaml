@@ -159,7 +159,7 @@
                                     </Button>
 
                                     <Button Name="btnModifyEntry"
-                                            Style="{StaticResource CommandButton}"                                        
+                                            Style="{StaticResource CommandButton}"                                    
                                             Grid.Column="2"
                                             ToolTip="Modify selected command entry"
                                             Click="btnModifyEntry_Click">
@@ -179,7 +179,7 @@
 
                             <ListView Name="lvCommandDictionary"
                                       ItemsSource="{Binding SelectedUser.CommandDictionary}"
-                                      MaxHeight="100">
+                                      MaxHeight="150">
                                 <ListView.View>
                                     <GridView>
                                         <GridViewColumn Header="Command"
@@ -225,12 +225,6 @@
                             </Grid>
                         </StackPanel>
                     </GroupBox>
-                                      
-                    <Button Name="SaveButton"
-                            Style="{StaticResource NormalButton}"
-                            Content="Save"
-                            Click="SaveButton_Click"/>
-
                 </StackPanel>
             </TabItem>
             <TabItem Name="tabVideoFeed"
@@ -243,8 +237,25 @@
                     <CheckBox Name="chkEnableTracking"
                               Content="Enable Tracking"
                               HorizontalAlignment="Center"
-                              Margin="20"
+                              Margin="10"
                               Click="chkEnableTracking_Click"/>
+
+                    <Grid HorizontalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+
+                        <Label Content="Active User: "
+                               Grid.Column="0"/>
+
+                        <Label Name="lblActiveUser"
+                               Content="{Binding ActiveUser}"
+                               HorizontalAlignment="Left"
+                               Grid.Column="1" />
+
+                    </Grid>
+                    
 
                     <Grid  Name="gridTrainingButtons"
                            HorizontalAlignment="Center"

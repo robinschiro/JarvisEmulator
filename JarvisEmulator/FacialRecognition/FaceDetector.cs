@@ -15,6 +15,8 @@ using System.Windows.Media;
 using System.Drawing;
 using System.Collections.Concurrent;
 using System.Runtime.ExceptionServices;
+using System.IO;
+using System.Threading;
 
 namespace JarvisEmulator
 {
@@ -44,6 +46,9 @@ namespace JarvisEmulator
         private ConcurrentBag<Rectangle> faceRectangleBag = new ConcurrentBag<Rectangle>();
         private bool drawDetectionRectangles = false;
         private List<User> users;
+        private User activeUser;
+
+        private volatile bool stopFrameProcessing;
 
 
         private System.Threading.Timer frameTimer;
@@ -71,7 +76,8 @@ namespace JarvisEmulator
         public void EnableFrameCapturing()
         {
             // Spawn the timer that populates the video feed with frames.
-            frameTimer = new System.Threading.Timer(GetCurrentFrame, null, 0, 100);
+            Thread frameProcessor = new Thread(PerformFrameProcessing);
+            frameProcessor.Start();
 
 #if USE_MULTITHREADING
             // Spawn the timer that performs the detection.
@@ -100,12 +106,12 @@ namespace JarvisEmulator
         {
             if ( null != currentFrame )
             {
-                // Convert it to grayscale
-                gray = currentFrame.Convert<Gray, Byte>();
-
-                // Create an array of detected faces.                
                 try
                 {
+                    // Convert frame to grayscale
+                    gray = currentFrame.Convert<Gray, Byte>();
+
+                    // Create an array of detected faces.                
                     facesDetected = gray.DetectHaarCascade(face, 1.2, 10, Emgu.CV.CvEnum.HAAR_DETECTION_TYPE.DO_CANNY_PRUNING, new System.Drawing.Size(20, 20));
                 }
                 catch (Exception ex) { }
@@ -119,8 +125,17 @@ namespace JarvisEmulator
             }
         }
 
+        private void PerformFrameProcessing()
+        {
+            while ( !stopFrameProcessing )
+            {
+                GetCurrentFrame();
+                Thread.Sleep(10);
+            }
+        }
+
         // Retrieve a frame from the capture device, with faces optionally bounded by rectangles.
-        public void GetCurrentFrame( object state )
+        public void GetCurrentFrame( object state = null )
         {
             // Get the current frame from capture device
             grabber.QueryFrame();
@@ -134,32 +149,53 @@ namespace JarvisEmulator
             try
             {
                 // Process the frame in order to detect faces.
-                if ( null != faceRectangleBag )
+                // TODO: Collection is modifed mid-enumeration. Need to fix.
+                foreach ( Rectangle rect in faceRectangleBag )
                 {
-                    // Action for each element detected
-                    // TODO: Collection is modifed mid-enumeration. Need to fix.
-                    foreach ( Rectangle rect in faceRectangleBag )
-                    {
-                        result = currentFrame.Copy(rect).Convert<Gray, byte>().Resize(100, 100, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
+                    // Retrieve just the user's face from the frame.
+                    result = currentFrame.Copy(rect).Convert<Gray, byte>().Resize(100, 100, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
 
-                        // Draw a rectangle around each detected face.
-                        if ( drawDetectionRectangles )
+                    lock ( trainingImages )
+                    {
+                        // Perform recognition on the result.
+                        if ( 0 != trainingImages.Count)
                         {
-                            currentFrame.Draw(rect, new Bgr(System.Drawing.Color.Red), 2);
+                            // Create a set of criteria for the recognizer.
+                            MCvTermCriteria termCrit = new MCvTermCriteria(trainingImages.Count, 0.001);
+
+                            // Create a recognizer based on the training images and term criteria.
+                            EigenObjectRecognizer recognizer = new EigenObjectRecognizer(trainingImages.ToArray(), trainingImageGuids.ToArray(), 3000, ref termCrit);
+
+                            // Determine the active user.
+                            Guid userGuid = recognizer.Recognize(result);
+                            activeUser = users.Find(user => user.Guid == userGuid);
                         }
                     }
-                }
 
-                // Convert the frame to something viewable within WPF and freeze it so that it can be displayed.
-                frameBitmap = ToBitmapSource(currentFrame);
-                frameBitmap.Freeze();
+                    // Draw a rectangle around each detected face.
+                    if ( drawDetectionRectangles )
+                    {
+                        currentFrame.Draw(rect, new Bgr(System.Drawing.Color.Red), 2);
+                    }
+                    
+                }
             }
             catch (Exception ex) { }
+            finally
+            {
+                if ( null != currentFrame )
+                {
+                    // Convert the frame to something viewable within WPF and freeze it so that it can be displayed.
+                    frameBitmap = ToBitmapSource(currentFrame);
+                    frameBitmap.Freeze();
+                }
+            }
 
             // Create a frame data packet.
             FrameData packet = new FrameData();
             packet.Frame = frameBitmap;
             packet.Face = result;
+            packet.ActiveUser = activeUser;
 
             // Send the frame to all frame observers.
             SubscriptionManager.Publish(frameObservers, packet);
@@ -188,7 +224,30 @@ namespace JarvisEmulator
 
         private void RetrieveTrainingImages()
         {
+            if ( null != pathToTrainingImagesFolder )
+            {
+                // Since the trainingImages lists is about to modifed, lock it.
+                lock ( trainingImages )
+                {
+                    // Clear the training image and guid lists.
+                    trainingImages.Clear();
+                    trainingImageGuids.Clear();
 
+                    // Load each training image file into the list of images.
+                    // At the same time, update the corresponding Guid list.
+                    DirectoryInfo[] userFolders = (new DirectoryInfo(pathToTrainingImagesFolder)).GetDirectories();
+                    foreach ( DirectoryInfo folder in userFolders )
+                    {
+                        FileInfo[] files = folder.GetFiles();
+                        Guid userGuid = new Guid(folder.Name);
+                        foreach ( FileInfo file in files )
+                        {
+                            trainingImages.Add(new Image<Gray, byte>(file.FullName));
+                            trainingImageGuids.Add(userGuid);
+                        }
+                    }
+                }
+            }
         }
 
         #region Observer Pattern Required Methods
@@ -204,8 +263,28 @@ namespace JarvisEmulator
 
             if ( value.SaveToProfile )
             {
-
+                users = value.Users;
+                pathToTrainingImagesFolder = value.PathToTrainingImages;
             }
+
+            if ( value.RefreshTrainingImages )
+            {
+                RetrieveTrainingImages();
+            }
+
+            if ( value.PerformCleanup )
+            {
+                stopFrameProcessing = true;
+            }
+        }
+
+        public void OnNext( ConfigData value )
+        {
+            drawDetectionRectangles = value.DrawDetectionRectangles;
+            users = value.Users;
+            pathToTrainingImagesFolder = value.PathToTrainingImages;
+
+            RetrieveTrainingImages();
         }
 
         public void OnError( Exception error )
@@ -216,18 +295,6 @@ namespace JarvisEmulator
         public void OnCompleted()
         {
             throw new NotImplementedException();
-        }
-
-        public void OnNext( ConfigData value )
-        {
-            users = value.Users;
-            drawDetectionRectangles = value.DrawDetectionRectangles;
-            pathToTrainingImagesFolder = value.PathToTrainingImages;
-
-            lock(trainingImages)
-            {
-                RetrieveTrainingImages();
-            }
         }
 
         #endregion

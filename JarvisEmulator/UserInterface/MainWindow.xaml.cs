@@ -24,6 +24,8 @@ namespace JarvisEmulator
         public string PathToTrainingImages;
 
         public bool SaveToProfile;
+        public bool RefreshTrainingImages;
+        public bool PerformCleanup;
     }
 
 
@@ -50,6 +52,17 @@ namespace JarvisEmulator
             {
                 selectedUser = value;
                 NotifyPropertyChanged("SelectedUser");
+            }
+        }
+
+        private User activeUser;
+        public User ActiveUser
+        {
+            get { return activeUser; }
+            set
+            {
+                activeUser = value;
+                NotifyPropertyChanged("ActiveUser");
             }
         }
 
@@ -155,6 +168,8 @@ namespace JarvisEmulator
                 {
                     (selectedUser as User).CommandDictionary.Remove(commandPair.Key);
                 }
+
+                // TODO: Delete user's picture folder.
             }
         }
 
@@ -176,6 +191,13 @@ namespace JarvisEmulator
             }
         }
 
+        private void btnFinish_Click( object sender, RoutedEventArgs e )
+        {
+            ToggleTrainingMode(false);
+
+            PublishUIData(refreshTrainingImages: true);
+        }
+
         private void btnDeleteUser_Click( object sender, RoutedEventArgs e )
         {
             if ( MessageBoxResult.Yes == MessageBox.Show("Are you sure you want to delete the selected user?", "Delete User", MessageBoxButton.YesNo, MessageBoxImage.Question) )
@@ -189,6 +211,9 @@ namespace JarvisEmulator
                 // Update the public property.
                 object selectedItem = cboxUserSelection.SelectedItem;
                 SelectedUser = (null != selectedItem) ? (selectedItem as User) : null;
+
+                // Save to profile.
+                PublishUIData(saveToProfile: true);
             }
         }
 
@@ -205,13 +230,10 @@ namespace JarvisEmulator
 
                 // Make this user the currently selected user.
                 cboxUserSelection.SelectedItem = newUser;
-            }
-        }
 
-        private void SaveButton_Click( object sender, RoutedEventArgs e )
-        {
-            // Update all subscribers.
-            PublishUIData(true);
+                // Save to profile.
+                PublishUIData(saveToProfile: true);
+            }
         }
 
         private void chkEnableTracking_Click( object sender, RoutedEventArgs e )
@@ -226,6 +248,8 @@ namespace JarvisEmulator
             dialog.ShowDialog();
 
             tboxTrainingImagesPath.Text = dialog.SelectedPath;
+
+            PublishUIData(saveToProfile: true, refreshTrainingImages: true);
         }
 
         private void btnSnapshot_Click( object sender, RoutedEventArgs e )
@@ -261,14 +285,9 @@ namespace JarvisEmulator
 
         }
 
-        private void btnFinish_Click( object sender, RoutedEventArgs e )
-        {
-            ToggleTrainingMode(false);
-        }
-
         private void Window_Closing( object sender, CancelEventArgs e )
         {
-            PromptForSave();
+            PublishUIData(saveToProfile: true, performCleanup: true);
         }
 
 
@@ -321,31 +340,6 @@ namespace JarvisEmulator
             }));
         }
 
-
-        // Create a new thread to run a function that cannot be run on the same thread invoking CreateNewThread().
-        public Thread CreateNewThread( Action<object> action, object data = null, string name = "" )
-        {
-            ThreadStart l_Start = delegate () { Dispatcher.Invoke(DispatcherPriority.Normal, action, data); };
-            Thread l_NewThread = new Thread(l_Start);
-
-            if ( !String.IsNullOrEmpty(name) )
-            {
-                l_NewThread.Name = name;
-            }
-
-            l_NewThread.Start();
-
-            return l_NewThread;
-        }
-
-        private void PromptForSave()
-        {
-            if ( MessageBoxResult.Yes == System.Windows.MessageBox.Show("Would you like to save your changes?", "Save Changes?", MessageBoxButton.YesNo) )
-            {
-                PublishUIData(true);
-            }
-        }
-
         #region Observer Patter Requirements
 
         // Update the user interface using information from the Configuration Manager.
@@ -361,8 +355,6 @@ namespace JarvisEmulator
                 chkEnableTracking.IsChecked = value.DrawDetectionRectangles;
                 chkGreetUsers.IsChecked = value.HaveJarvisGreetUser;
                 tboxTrainingImagesPath.Text = value.PathToTrainingImages;
-
-                // Refresh listview.
             }       
         }
 
@@ -370,6 +362,7 @@ namespace JarvisEmulator
         {
             currentFrame = value.Frame;
             facePicture = value.Face;
+            ActiveUser = value.ActiveUser;
         }
 
         public IDisposable Subscribe( IObserver<UIData> observer )
@@ -377,7 +370,7 @@ namespace JarvisEmulator
             return SubscriptionManager.Subscribe(uiObservers, observer);
         }
 
-        private void PublishUIData( bool saveToProfile = false )
+        private void PublishUIData( bool saveToProfile = false, bool refreshTrainingImages = false, bool performCleanup = false )
         {
             UIData packet = new UIData();
             packet.DrawDetectionRectangles = chkEnableTracking.IsChecked ?? false;
@@ -385,6 +378,8 @@ namespace JarvisEmulator
             packet.PathToTrainingImages = tboxTrainingImagesPath.Text;
             packet.Users = users.ToList<User>();
             packet.SaveToProfile = saveToProfile;
+            packet.RefreshTrainingImages = refreshTrainingImages;
+            packet.PerformCleanup = performCleanup;
 
             SubscriptionManager.Publish(uiObservers, packet);
         }

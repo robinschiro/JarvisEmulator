@@ -78,9 +78,6 @@ namespace JarvisEmulator
 
                 // Save the profile.
                 profile.Save();
-
-                // Display a success message to the user.
-                MessageBox.Show("Settings saved successfully!", "Success!");
             }
             catch ( Exception ex )
             {
