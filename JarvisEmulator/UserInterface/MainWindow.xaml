@@ -179,7 +179,7 @@
 
                             <ListView Name="lvCommandDictionary"
                                       ItemsSource="{Binding SelectedUser.CommandDictionary}"
-                                      MaxHeight="150">
+                                      MaxHeight="100">
                                 <ListView.View>
                                     <GridView>
                                         <GridViewColumn Header="Command"
@@ -190,6 +190,11 @@
                                                         DisplayMemberBinding="{Binding Value}"/>
                                     </GridView>
                                 </ListView.View>
+                                <ListView.ItemContainerStyle>
+                                    <Style TargetType="ListViewItem">
+                                        <EventSetter Event="MouseDoubleClick" Handler="btnModifyEntry_Click" />
+                                    </Style>
+                                </ListView.ItemContainerStyle>
                             </ListView>
 
                             <Grid>

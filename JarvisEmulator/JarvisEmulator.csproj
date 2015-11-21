@@ -85,10 +85,6 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="UserInterface\CreateUser.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
     <Page Include="UserInterface\MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -100,9 +96,6 @@
     <Compile Include="FacialRecognition\EigenObjectRecognizer.cs" />
     <Compile Include="UserInterface\TwoEntryDialog.xaml.cs">
       <DependentUpon>TwoEntryDialog.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="UserInterface\CreateUser.xaml.cs">
-      <DependentUpon>CreateUser.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserInterface\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>

@@ -120,31 +120,35 @@ namespace JarvisEmulator
             grabber.QueryFrame();
             currentFrame = grabber.QueryFrame().Resize(320, 240, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
             Image<Gray, byte> result = null;
+            BitmapSource frameBitmap = null;
 
 #if !USE_MULTITHREADING
             DetectFaces();
 #endif
-
-            // Process the frame in order to detect faces.
-            if ( null != faceRectangleBag )
+            try
             {
-                // Action for each element detected
-                // TODO: Collecition is modifed mid-enumeration. Need to fix.
-                foreach ( Rectangle rect in faceRectangleBag )
+                // Process the frame in order to detect faces.
+                if ( null != faceRectangleBag )
                 {
-                    result = currentFrame.Copy(rect).Convert<Gray, byte>().Resize(100, 100, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
-
-                    // Draw a rectangle around each detected face.
-                    if ( drawDetectionRectangles )
+                    // Action for each element detected
+                    // TODO: Collection is modifed mid-enumeration. Need to fix.
+                    foreach ( Rectangle rect in faceRectangleBag )
                     {
-                        currentFrame.Draw(rect, new Bgr(System.Drawing.Color.Red), 2);
+                        result = currentFrame.Copy(rect).Convert<Gray, byte>().Resize(100, 100, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
+
+                        // Draw a rectangle around each detected face.
+                        if ( drawDetectionRectangles )
+                        {
+                            currentFrame.Draw(rect, new Bgr(System.Drawing.Color.Red), 2);
+                        }
                     }
                 }
-            }
 
-            // Convert the frame to something viewable within WPF and freeze it so that it can be displayed.
-            BitmapSource frameBitmap = ToBitmapSource(currentFrame);
-            frameBitmap.Freeze();
+                // Convert the frame to something viewable within WPF and freeze it so that it can be displayed.
+                frameBitmap = ToBitmapSource(currentFrame);
+                frameBitmap.Freeze();
+            }
+            catch (Exception ex) { }
 
             // Create a frame data packet.
             FrameData packet = new FrameData();
