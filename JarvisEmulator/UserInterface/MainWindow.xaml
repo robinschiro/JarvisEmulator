@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:JarvisEmulator"
         mc:Ignorable="d"
-        Title="Jarvis Emulator" Height="500" Width="525">
+        Title="Jarvis Emulator" Height="500" Width="500" Closing="Window_Closing">
 
     <Window.Resources>
         <Style x:Key="BrowseButtonStyle" TargetType="Button">
@@ -39,8 +39,28 @@
         </Style>
     </Window.Resources>
     
-    <Grid>
-        <TabControl Name="tabControlMain">
+    <Grid Name="pnlMain">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid Grid.Row="0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            
+            <Label Content="Selected User: "
+                   Grid.Column="0"/>
+
+            <Label Name="lblSelectedUser"
+                   Content="{Binding SelectedUser}"
+                   HorizontalAlignment="Left"
+                   Grid.Column="1"/>
+
+        </Grid>
+        <TabControl Name="tabControlMain"
+                    Grid.Row="1">
             <TabItem Name="tabConfig"
                      Header="Configuration" >
                 <StackPanel Name="pnlConfig">
@@ -64,12 +84,13 @@
                                    Grid.Column="0"
                                    Grid.Row="0"/>
                             <TextBox Name="tboxTrainingImagesPath"
+                                     IsReadOnly="True"
                                      Grid.Column="1"
                                      Grid.Row="0"/>
-                            <Button Name="btnBrowseForTGit"                                    
+                            <Button Name="btnBrowse"                                    
                                     Grid.Row="0"
                                     Style="{StaticResource BrowseButtonStyle}"
-                                    Click="BrowseForFolder"/>
+                                    Click="btnBrowse_Click"/>
 
                             <CheckBox Name="chkGreetUsers"
                                       Content="Have Jarvis Greet Users"
@@ -87,6 +108,7 @@
                             <Label Name="lblUserSelection"
                                    Content="Selected User: " />
                             <ComboBox Name="cboxUserSelection"
+                                      ItemsSource="{Binding Users}"
                                       SelectionChanged="cboxUserSelection_SelectionChanged"/>
 
                             <Grid Height="40">
@@ -111,6 +133,7 @@
                                     <Button Name="btnDeleteEntry"
                                             Style="{StaticResource CommandButton}"                                        
                                             Grid.Column="0"
+                                            ToolTip="Delete selected command entry"
                                             Click="btnDeleteEntry_Click">
                                         <Button.Content>
                                             <Image>
@@ -124,6 +147,7 @@
                                     <Button Name="btnAddEntry"
                                             Style="{StaticResource CommandButton}"                                        
                                             Grid.Column="1"
+                                            ToolTip="Add command entry"
                                             Click="btnAddEntry_Click">
                                         <Button.Content>
                                             <Image>
@@ -135,8 +159,9 @@
                                     </Button>
 
                                     <Button Name="btnModifyEntry"
-                                            Style="{StaticResource CommandButton}"                                        
+                                            Style="{StaticResource CommandButton}"                                    
                                             Grid.Column="2"
+                                            ToolTip="Modify selected command entry"
                                             Click="btnModifyEntry_Click">
                                         <Button.Content>
                                             <Image>
@@ -153,17 +178,23 @@
                             </Grid>
 
                             <ListView Name="lvCommandDictionary"
-                                      ItemsSource="{Binding }">
+                                      ItemsSource="{Binding SelectedUser.CommandDictionary}"
+                                      MaxHeight="150">
                                 <ListView.View>
                                     <GridView>
                                         <GridViewColumn Header="Command"
                                                         Width="100"
                                                         DisplayMemberBinding="{Binding Key}"/>
                                         <GridViewColumn Header="URL/Path"
-                                                        Width="300"
+                                                        Width="350"
                                                         DisplayMemberBinding="{Binding Value}"/>
                                     </GridView>
                                 </ListView.View>
+                                <ListView.ItemContainerStyle>
+                                    <Style TargetType="ListViewItem">
+                                        <EventSetter Event="MouseDoubleClick" Handler="btnModifyEntry_Click" />
+                                    </Style>
+                                </ListView.ItemContainerStyle>
                             </ListView>
 
                             <Grid>
@@ -179,11 +210,11 @@
                                     Grid.Column="0"
                                     Click="btnTrainUser_Click"/>
 
-                                <Button Name="NewUserButton"
+                                <Button Name="btnNewUser"
                                     Style="{StaticResource NormalButton}"
                                     Content="New User"
                                     Grid.Column="1"
-                                    Click="NewUserButton_Click"/>
+                                    Click="btnNewUser_Click"/>
 
                                 <Button Name="btnDeleteUser"
                                     Style="{StaticResource NormalButton}"
@@ -192,17 +223,8 @@
                                     Click="btnDeleteUser_Click"/>
 
                             </Grid>
-
-
                         </StackPanel>
-
                     </GroupBox>
-                                      
-                    <Button Name="SaveButton"
-                            Style="{StaticResource NormalButton}"
-                            Content="Save"
-                            Click="SaveButton_Click"/>
-
                 </StackPanel>
             </TabItem>
             <TabItem Name="tabVideoFeed"
@@ -213,10 +235,53 @@
                            Height="240"/>
                     
                     <CheckBox Name="chkEnableTracking"
-                                 Content="Enable Tracking"
-                                 HorizontalAlignment="Center"
-                                 Margin="20"
-                                 Click="PublishUIData"/>
+                              Content="Enable Tracking"
+                              HorizontalAlignment="Center"
+                              Margin="10"
+                              Click="chkEnableTracking_Click"/>
+
+                    <Grid HorizontalAlignment="Center">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+
+                        <Label Content="Active User: "
+                               Grid.Column="0"/>
+
+                        <Label Name="lblActiveUser"
+                               Content="{Binding ActiveUser}"
+                               HorizontalAlignment="Left"
+                               Grid.Column="1" />
+
+                    </Grid>
+                    
+
+                    <Grid  Name="gridTrainingButtons"
+                           HorizontalAlignment="Center"
+                           Visibility="Hidden">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition />
+                            <ColumnDefinition />
+                        </Grid.ColumnDefinitions>
+
+                        <Button Name="btnSnapshot"
+                            Content="Take Snapshot"
+                            HorizontalAlignment="Center"
+                            Margin="0, 0, 10, 0"
+                            Grid.Column="0"
+                            Click="btnSnapshot_Click" />
+
+                        <Button Name="btnFinish"
+                                Content="Finish Training"
+                                HorizontalAlignment="Center"
+                                Margin="10, 0, 0, 0"
+                                Grid.Column="1"
+                                Click="btnFinish_Click" />
+                                
+                        
+                    </Grid>
+                    
                 </StackPanel>
             </TabItem>            
         </TabControl>

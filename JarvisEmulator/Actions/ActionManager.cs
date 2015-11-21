@@ -8,13 +8,24 @@ namespace JarvisEmulator
 {
     public struct ActionData
     {
-        public string Message;
+        public string inMessage;
+        public string outMessage;
     }
 
-    // TODO: Speech recognizer observer functions, RSSManager observer functions
-    public class ActionManager : IObservable<ActionData>, IObservable<UserNotification>, IObserver<ConfigData>
+    public enum actionManagerCommands
+    {
+        OPEN,
+        UPDATE,
+        CLOSE,
+        LOGOUT,
+        TAKEPICTURE
+    }
+
+    public class ActionManager : IObservable<ActionData>, IObserver<SpeechData>
     {
         RSSManager rssManager;
+        string command;
+        object commandObject;
 
         #region Observer lists
 
@@ -89,6 +100,11 @@ namespace JarvisEmulator
             }
         }
 
+        public void CommandLogout()
+        {
+            System.Diagnostics.Process.Start("shutdown", "-l");
+        }
+
         public void OnNext(ConfigData value)
         {
             if (value.ActiveUser != null)
@@ -98,9 +114,75 @@ namespace JarvisEmulator
             }
         }
 
+        public void CommandTakePhoto()
+        {
+
+        }
+
+        public void CommandRSSUpdate()
+        {
+
+        }
+
+        public void CommandQuestionAsked()
+        {
+
+        }
+        public void Obtain()
+        {
+
+        }
+
         public void OnError(Exception error)
         {
             return;
+        }
+
+        public void OnCompleted()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void ProcessCommand()
+        {
+            if (commandObject.Equals(actionManagerCommands.LOGOUT))
+            {
+                CommandLogout();
+            }
+            if (commandObject.Equals(actionManagerCommands.UPDATE))
+            {
+                CommandRSSUpdate();
+            }
+            if (commandObject.Equals(actionManagerCommands.OPEN))
+            {
+                //gets the application name
+                command = command.Replace("OK Jarvis open", "");
+                //search through txt doc for the application location/.exe file
+                CommandOpenApplication(command);
+            }
+            if (commandObject.Equals(actionManagerCommands.CLOSE))
+            {
+                //gets the application name
+                command = command.Replace("OK Jarvis close", "");
+                //search through txt doc for the application location/.exe file
+                CommandCloseApplication(command);
+            }
+        }
+
+        public void DisplayError()
+        {
+
+        }
+
+        public void OnNext(SpeechData value)
+        {
+            command = value.Command;
+            commandObject = value.CommandValue;
+        }
+
+        public void OnError(Exception error)
+        {
+            throw new NotImplementedException();
         }
 
         public void OnCompleted()

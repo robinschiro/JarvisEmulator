@@ -72,6 +72,7 @@
     <Compile Include="Configuration\ConfigurationManager.cs" />
     <Compile Include="Configuration\User.cs" />
     <Compile Include="FacialRecognition\FaceDetector.cs" />
+    <Compile Include="ObservableDictionary.cs" />
     <Compile Include="Settings.cs" />
     <Compile Include="Speech\SpeechConstructor.cs" />
     <Compile Include="Speech\SpeechRecognizer.cs" />
@@ -80,7 +81,7 @@
     <Compile Include="tvToolbox\tvExtensions.cs" />
     <Compile Include="tvToolbox\tvFetchResource.cs" />
     <Compile Include="tvToolbox\tvProfile.cs" />
-    <Page Include="UserInterface\CommandEntryDialog.xaml">
+    <Page Include="UserInterface\TwoEntryDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -93,8 +94,8 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="FacialRecognition\EigenObjectRecognizer.cs" />
-    <Compile Include="UserInterface\CommandEntryDialog.xaml.cs">
-      <DependentUpon>CommandEntryDialog.xaml</DependentUpon>
+    <Compile Include="UserInterface\TwoEntryDialog.xaml.cs">
+      <DependentUpon>TwoEntryDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="UserInterface\MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
