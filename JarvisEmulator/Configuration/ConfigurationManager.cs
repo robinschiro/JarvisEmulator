@@ -144,8 +144,7 @@ namespace JarvisEmulator
             data.PathToTrainingImages = pathToTrainingImages;
             data.Users = users;
             data.IsInit = true;
-
-            data.ActiveUser = activeUser;
+            
 
             // Send configuration information to the observers.
             SubscriptionManager.Publish(configObservers, data);
