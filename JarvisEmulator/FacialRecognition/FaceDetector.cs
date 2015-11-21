@@ -298,7 +298,10 @@ namespace JarvisEmulator
             if ( value.PerformCleanup )
             {
                 stopFrameProcessing = true;
-                grabber.Dispose();
+                if ( null != grabber )
+                {
+                    grabber.Dispose();
+                }
             }
         }
 
