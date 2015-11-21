@@ -129,8 +129,8 @@ namespace JarvisEmulator
 
         public void OnNext(SpeechData value)
         {
-            command = value.command;
-            commandObject = value.commandObject;
+            command = value.CommandKey;
+            commandObject = value.CommandValue;
         }
 
         public void OnError(Exception error)

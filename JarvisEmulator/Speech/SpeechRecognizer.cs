@@ -14,22 +14,20 @@ namespace JarvisEmulator
 
     public struct SpeechData
     {
-        public string command;
-        public object commandObject;
-    }
+        public string CommandKey;
+        public object CommandValue;
+    }   
 
-   
-
-    public class SpeechRecognizer : IObserver<ConfigData>, IObservable<SpeechData>
+    public class SpeechRecognizer : IObserver<FrameData>, IObservable<SpeechData>
     {
         SpeechSynthesizer sSynth = new SpeechSynthesizer();
-        PromptBuilder pBuilder = new PromptBuilder();
-        SpeechRecognitionEngine sRecognize = new SpeechRecognitionEngine();
-        List<Word> words = new List<Word>();
-        User ActiveUser;
+        private PromptBuilder pBuilder = new PromptBuilder();
+        private SpeechRecognitionEngine sRecognize = new SpeechRecognitionEngine();
+        private List<Word> words = new List<Word>();
+        private User activeUser;
 
         String command = "";
-        object commandObject ;
+        object commandValue;
 
         private List<IObserver<SpeechData>> commandObserver = new List<IObserver<SpeechData>>();
 
@@ -76,24 +74,24 @@ namespace JarvisEmulator
             {
                 if (command.Contains("open"))
                 {
-                    commandObject = actionManagerCommands.OPEN;
+                    commandValue = actionManagerCommands.OPEN;
                 }
                 if (command.Contains("log out"))
                 {
-                    commandObject = actionManagerCommands.LOGOUT;
+                    commandValue = actionManagerCommands.LOGOUT;
                 }
                 if (command.Contains("close"))
                 {
-                    commandObject = actionManagerCommands.CLOSE;
+                    commandValue = actionManagerCommands.CLOSE;
                 }
                 if (command.Contains("update"))
                 {
-                    commandObject = actionManagerCommands.UPDATE;
+                    commandValue = actionManagerCommands.UPDATE;
                 }
                 if (command.Contains("take my picture") || command.Contains("snap") ||
                     command.Contains("cheese") || command.Contains("selfie"))
                 {
-                    commandObject = actionManagerCommands.TAKEPICTURE;
+                    commandValue = actionManagerCommands.TAKEPICTURE;
                 }
 
             }
@@ -129,15 +127,18 @@ namespace JarvisEmulator
         private void PublishSpeechData()
         {
             SpeechData packet = new SpeechData();
-            packet.command= command;
-            packet.commandObject = commandObject;
+            packet.CommandKey= command;
+            packet.CommandValue = commandValue;
 
             SubscriptionManager.Publish(commandObserver, packet);
         }
 
-        public void OnNext(ConfigData user)
+        public void OnNext(FrameData user)
         {
-            ActiveUser = user.ActiveUser;
+            activeUser = user.ActiveUser;
+
+            // TODO: Update the vocabulary of Jarvis based on the current active user.
+            // This update should only be made if the active user has changed.
         }
 
         public void OnError(Exception error)

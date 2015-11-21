@@ -23,9 +23,10 @@ namespace JarvisEmulator
     {
         public BitmapSource Frame;
         public Image<Gray, byte> Face;
+        public User ActiveUser;
     }
 
-    public class FaceDetector : IObservable<User>, IObservable<FrameData>, IObserver<UIData>, IObserver<ConfigData>
+    public class FaceDetector : IObservable<FrameData>, IObserver<UIData>, IObserver<ConfigData>
     {
         #region Private Variables
 
@@ -34,7 +35,10 @@ namespace JarvisEmulator
         private HaarCascade face;
         private MCvFont font = new MCvFont(FONT.CV_FONT_HERSHEY_TRIPLEX, 0.5d, 0.5d);
         private Image<Gray, byte> gray = null;
+
+        private string pathToTrainingImagesFolder;
         private List<Image<Gray, byte>> trainingImages = new List<Image<Gray, byte>>();
+        private List<Guid> trainingImageGuids = new List<Guid>();
 
         private MCvAvgComp[][] facesDetected;
         private ConcurrentBag<Rectangle> faceRectangleBag = new ConcurrentBag<Rectangle>();
@@ -74,6 +78,8 @@ namespace JarvisEmulator
             detectionTimer = new System.Threading.Timer(DetectFaces, null, 0, 100);
 #endif
         }
+
+        #region Frame Processing
 
         // Initialize face detection.
         public void InitializeCaptureDevice()
@@ -178,10 +184,14 @@ namespace JarvisEmulator
             }
         }
 
-        public IDisposable Subscribe( IObserver<User> observer )
+        #endregion
+
+        private void RetrieveTrainingImages()
         {
-            return SubscriptionManager.Subscribe(userObservers, observer);
+
         }
+
+        #region Observer Pattern Required Methods
 
         public IDisposable Subscribe( IObserver<FrameData> observer )
         {
@@ -191,6 +201,11 @@ namespace JarvisEmulator
         public void OnNext( UIData value )
         {
             drawDetectionRectangles = value.DrawDetectionRectangles;
+
+            if ( value.SaveToProfile )
+            {
+
+            }
         }
 
         public void OnError( Exception error )
@@ -207,6 +222,14 @@ namespace JarvisEmulator
         {
             users = value.Users;
             drawDetectionRectangles = value.DrawDetectionRectangles;
+            pathToTrainingImagesFolder = value.PathToTrainingImages;
+
+            lock(trainingImages)
+            {
+                RetrieveTrainingImages();
+            }
         }
+
+        #endregion
     }
 }

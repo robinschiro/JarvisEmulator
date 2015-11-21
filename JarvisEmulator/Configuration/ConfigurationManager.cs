@@ -15,13 +15,12 @@ namespace JarvisEmulator
         public bool DrawDetectionRectangles;
         public bool HaveJarvisGreetUser;
         public List<User> Users;
-        public User ActiveUser;
         public string PathToTrainingImages;
 
         public bool IsInit;
     }
 
-    public class ConfigurationManager : IObservable<ConfigData>, IObserver<User>, IObserver<UIData>
+    public class ConfigurationManager : IObservable<ConfigData>, IObserver<UIData>
     {
         #region Configuration Members
 
@@ -158,11 +157,6 @@ namespace JarvisEmulator
         public void OnError( Exception error )
         {
             throw new NotImplementedException();
-        }
-
-        public void OnNext( User value )
-        {
-            activeUser = value;
         }
 
         public void OnNext( UIData value )
