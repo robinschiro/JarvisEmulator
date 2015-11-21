@@ -23,7 +23,13 @@ namespace JarvisEmulator
         private Matrix<float>[] _eigenValues;
         private Guid[] _labels;
         private double _eigenDistanceThreshold;
-       
+
+        // The Guids of the recognized user from most recent n frames will be stored 
+        // to improve accuracy of the determination of the active user.
+        private int queueMaxCount = 20;
+        private static Queue<Guid> recentRecognitionQueue = new Queue<Guid>();
+        private static Dictionary<Guid, int> recognitionCounts = new Dictionary<Guid, int>();
+
         /// <summary>
         /// Get the eigen vectors that form the eigen space
         /// </summary>
@@ -79,17 +85,6 @@ namespace JarvisEmulator
         }
        
         /// <summary>
-        /// Create an object recognizer using the specific tranning data and parameters, it will always return the most similar object
-        /// </summary>
-        /// <param name="images">The images used for training, each of them should be the same size. It's recommended the images are histogram normalized</param>
-        /// <param name="labels">The labels corresponding to the images</param>
-        /// <param name="termCrit">The criteria for recognizer training</param>
-        public EigenObjectRecognizer(Image<Gray, Byte>[] images, Guid[] labels, ref MCvTermCriteria termCrit)
-           : this(images, labels, 0, ref termCrit)
-        {
-        }
-       
-        /// <summary>
         /// Create an object recognizer using the specific tranning data and parameters
         /// </summary>
         /// <param name="images">The images used for training, each of them should be the same size. It's recommended the images are histogram normalized</param>
@@ -100,7 +95,7 @@ namespace JarvisEmulator
         /// If the threshold is &lt; 0, the recognizer will always treated the examined image as one of the known object. 
         /// </param>
         /// <param name="termCrit">The criteria for recognizer training</param>
-        public EigenObjectRecognizer(Image<Gray, Byte>[] images, Guid[] labels, double eigenDistanceThreshold, ref MCvTermCriteria termCrit)
+        public EigenObjectRecognizer(Image<Gray, Byte>[] images, Guid[] labels, int cacheSize, double eigenDistanceThreshold, ref MCvTermCriteria termCrit)
         {
            Debug.Assert(images.Length == labels.Length, "The number of images should equals the number of labels");
            Debug.Assert(eigenDistanceThreshold >= 0.0, "Eigen-distance threshold should always >= 0.0");
@@ -122,8 +117,8 @@ namespace JarvisEmulator
                });
        
            _labels = labels;
-       
            _eigenDistanceThreshold = eigenDistanceThreshold;
+            queueMaxCount = cacheSize;
         }
        
         #region static methods
@@ -246,10 +241,52 @@ namespace JarvisEmulator
         {
             int index;
             float eigenDistance;
-            Guid label;
-            FindMostSimilarObject(image, out index, out eigenDistance, out label);          
-            
-            return (_eigenDistanceThreshold <= 0 || eigenDistance < _eigenDistanceThreshold )  ? _labels[index] : Guid.Empty;
+            Guid userGuid;
+            FindMostSimilarObject(image, out index, out eigenDistance, out userGuid);
+
+            userGuid = (_eigenDistanceThreshold <= 0 || eigenDistance < _eigenDistanceThreshold) ? userGuid : Guid.Empty;
+
+            return PerformCachedRecognition(userGuid);
+        }
+
+        // A certain number of previous recognitions are saved in order to improve the stability of facial recognition.
+        // Recognition without caching is much more volative.
+        // Developed by Robin Schiro.
+        private Guid PerformCachedRecognition( Guid userGuid )
+        {
+            // Add the result to the queue.
+            recentRecognitionQueue.Enqueue(userGuid);
+            if ( !recognitionCounts.ContainsKey(userGuid) )
+            {
+                recognitionCounts[userGuid] = 1;
+            }
+            else
+            {
+                recognitionCounts[userGuid] = recognitionCounts[userGuid] + 1;
+            }
+
+            // If the queue has reached its max size, dequeue.
+            if ( recentRecognitionQueue.Count >= queueMaxCount )
+            {
+                Guid dequeuedGuid = recentRecognitionQueue.Dequeue();
+
+                if ( recognitionCounts[dequeuedGuid] > 0 )
+                {
+                    recognitionCounts[dequeuedGuid] = recognitionCounts[dequeuedGuid] - 1;
+                }
+            }
+
+            // Analyze the dictionary to determine which user guid appears the most.
+            KeyValuePair<Guid, int> maxCountPair = new KeyValuePair<Guid, int>(Guid.Empty, 0);
+            foreach ( KeyValuePair<Guid, int> pair in recognitionCounts )
+            {
+                if ( pair.Value > maxCountPair.Value )
+                {
+                    maxCountPair = pair;
+                }
+            }
+
+            return maxCountPair.Key;
         }
     }
 }

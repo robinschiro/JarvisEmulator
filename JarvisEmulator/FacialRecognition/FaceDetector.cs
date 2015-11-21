@@ -41,6 +41,7 @@ namespace JarvisEmulator
         private string pathToTrainingImagesFolder;
         private List<Image<Gray, byte>> trainingImages = new List<Image<Gray, byte>>();
         private List<Guid> trainingImageGuids = new List<Guid>();
+        private const int MAX_CACHE_SIZE = 20;
 
         private MCvAvgComp[][] facesDetected;
         private ConcurrentBag<Rectangle> faceRectangleBag = new ConcurrentBag<Rectangle>();
@@ -164,7 +165,7 @@ namespace JarvisEmulator
                             MCvTermCriteria termCrit = new MCvTermCriteria(trainingImages.Count, 0.001);
 
                             // Create a recognizer based on the training images and term criteria.
-                            EigenObjectRecognizer recognizer = new EigenObjectRecognizer(trainingImages.ToArray(), trainingImageGuids.ToArray(), 3000, ref termCrit);
+                            EigenObjectRecognizer recognizer = new EigenObjectRecognizer(trainingImages.ToArray(), trainingImageGuids.ToArray(), MAX_CACHE_SIZE, 5000, ref termCrit);
 
                             // Determine the active user.
                             Guid userGuid = recognizer.Recognize(result);
@@ -201,6 +202,8 @@ namespace JarvisEmulator
             SubscriptionManager.Publish(frameObservers, packet);
         }
 
+
+
         // Convert a bitmap image to a BitmapSource, which WPF can use to display the image.
         public static BitmapSource ToBitmapSource( IImage image )
         {
@@ -222,6 +225,7 @@ namespace JarvisEmulator
 
         #endregion
 
+        // Retrieve the training images of all users from the training images folder.
         private void RetrieveTrainingImages()
         {
             if ( null != pathToTrainingImagesFolder )
