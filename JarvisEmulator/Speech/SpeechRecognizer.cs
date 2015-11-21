@@ -35,16 +35,31 @@ namespace JarvisEmulator
         {
             Choices sList = new Choices();
             
-            string[] greeting = { "hello Jarvis", "hi Jarvis", "howdy Jarvis" };
-
-            sList.Add(new string[] { "hello Jarvis", "hi Jarvis","howdy Jarvis",
-                "OK Jarvis", "goodbye","bye","exit","see you later",
+            //To prevent Jarvis from recognizing the wrong words.
+            string[] similar = {"ride Jarvis", "fly Jarvis","hide Jarvis","try Jarvis",
+                "my harvest" };
+            string[] mainCommands = { "hello Jarvis", "hi Jarvis","howdy Jarvis","OK Jarvis",
                 "OK Jarvis goodbye","OK Jarvis bye","OK Jarvis exit", "OK Jarvis see you later",
-                "OK Jarvis log out", "OK Jarvis open", "OK Jarvis close",
-                "OK Jarvis update",
-                "OK Jarvis take my picture", "OK Jarvis snap", "OK Jarvis cheese", "OK Jarvis selfie"});
-            //string[] key = ActiveUser.CommandDictionary.;
-            sList.Add(new String[] { "OK Jarvis open" + "word" });
+                "OK Jarvis log out", "OK Jarvis open", "OK Jarvis close","OK Jarvis update",
+                "OK Jarvis take my picture", "OK Jarvis snap", "OK Jarvis cheese", "OK Jarvis selfie"};
+            
+
+            //Adds commands to the recognizer's dictionary.
+            List<String> commandKeys = new List<String>(); ;
+            if (ActiveUser != null)
+            {
+                commandKeys = new List<String>(ActiveUser.CommandDictionary.Keys);
+            }
+            string[] appOpen = new string[commandKeys.Count];
+            
+            for (int i = 0; i < commandKeys.Count; i++)
+            {
+                appOpen[i] = "OK Jarvis open" + commandKeys[i];
+            }
+
+            sList.Add(mainCommands);
+            sList.Add(similar);
+            sList.Add(appOpen);
 
             try
             {
