@@ -16,7 +16,7 @@ namespace JarvisEmulator
     {
         public string Command;
         public object CommandValue;
-    }   
+    }
 
     public class SpeechRecognizer : IObserver<FrameData>, IObservable<SpeechData>
     {
@@ -27,14 +27,14 @@ namespace JarvisEmulator
         private User activeUser;
 
         String command = "";
-        object commandValue;
+        object commandValue = "";
 
         private List<IObserver<SpeechData>> commandObserver = new List<IObserver<SpeechData>>();
 
         public SpeechRecognizer()
         {
             Choices sList = new Choices();
-            
+
             //To prevent Jarvis from recognizing the wrong words.
             string[] similar = {"ride Jarvis", "fly Jarvis","hide Jarvis","try Jarvis",
                 "my harvest" };
@@ -42,7 +42,7 @@ namespace JarvisEmulator
                 "OK Jarvis goodbye","OK Jarvis bye","OK Jarvis exit", "OK Jarvis see you later",
                 "OK Jarvis log out", "OK Jarvis open", "OK Jarvis close","OK Jarvis update",
                 "OK Jarvis take my picture", "OK Jarvis snap", "OK Jarvis cheese", "OK Jarvis selfie"};
-            
+
 
             //Adds commands to the recognizer's dictionary.
             List<String> commandKeys = new List<String>();
@@ -51,15 +51,18 @@ namespace JarvisEmulator
                 commandKeys = new List<String>(activeUser.CommandDictionary.Keys);
             }
             string[] appOpen = new string[commandKeys.Count];
-            
+            string[] update = new string[commandKeys.Count];
+
             for (int i = 0; i < commandKeys.Count; i++)
             {
                 appOpen[i] = "OK Jarvis open" + commandKeys[i];
+                update[i] = "OK Jarvis update" + commandKeys[i];
             }
 
             sList.Add(mainCommands);
             sList.Add(similar);
             sList.Add(appOpen);
+            sList.Add(update);
 
             try
             {
@@ -84,29 +87,32 @@ namespace JarvisEmulator
         public void EnableListening()
         {
             // string command = e.Result.Text;
-            
+
             if (command.StartsWith("OK Jarvis"))
             {
                 if (command.Contains("open"))
                 {
-                    commandValue = actionManagerCommands.OPEN;
+                    getCommandVal();
+                    command = actionManagerCommands.OPEN.ToString();
                 }
-                if (command.Contains("log out"))
+                else if (command.Contains("log out"))
                 {
-                    commandValue = actionManagerCommands.LOGOUT;
+                    command = actionManagerCommands.LOGOUT.ToString();
                 }
-                if (command.Contains("close"))
+                else if (command.Contains("close"))
                 {
-                    commandValue = actionManagerCommands.CLOSE;
+                    getCommandVal();
+                    command = actionManagerCommands.CLOSE.ToString();
                 }
-                if (command.Contains("update"))
+                else if (command.Contains("update"))
                 {
-                    commandValue = actionManagerCommands.UPDATE;
+                    getCommandVal();
+                    command = actionManagerCommands.UPDATE.ToString();
                 }
-                if (command.Contains("take my picture") || command.Contains("snap") ||
+                else if (command.Contains("take my picture") || command.Contains("snap") ||
                     command.Contains("cheese") || command.Contains("selfie"))
                 {
-                    commandValue = actionManagerCommands.TAKEPICTURE;
+                    command = actionManagerCommands.TAKEPICTURE.ToString();
                 }
 
             }
@@ -114,17 +120,37 @@ namespace JarvisEmulator
             PublishSpeechData();
         }
 
+        public void getCommandVal()
+        {
+            List<String> commandKeys = new List<String>();
+            List<String> commandVal = new List<String>();
+            if (activeUser != null)
+            {
+                commandKeys = new List<String>(activeUser.CommandDictionary.Keys);
+                commandVal = new List<String>(activeUser.CommandDictionary.Values);
+            }
+            for (int i = 0; i < commandKeys.Count; i++)
+            {
+                if (command == commandKeys[i])
+                {
+                    commandValue = commandVal[i];
+                    break;
+                }
+            }
+        }
+
+        public void swap()
+        {
+            string temp;
+            temp = commandValue.ToString();
+
+            commandValue = command;
+            command = temp;
+        }
 
         private void SRecognize_SpeechRecognized(object sender, SpeechRecognizedEventArgs e)
         {
             command = e.Result.Text;
-            Random random = new Random();
-            int randomNumber = random.Next(0, 6);
-
-            if (command.StartsWith("hi Jarvis"))
-            {
-                sSynth.Speak("Hello");
-            }
 
             if (command.StartsWith("OK Jarvis"))
             {
@@ -142,7 +168,7 @@ namespace JarvisEmulator
         private void PublishSpeechData()
         {
             SpeechData packet = new SpeechData();
-            packet.Command= command;
+            packet.Command = command;
             packet.CommandValue = commandValue;
 
             SubscriptionManager.Publish(commandObserver, packet);

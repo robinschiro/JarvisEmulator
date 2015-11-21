@@ -60,26 +60,26 @@ namespace JarvisEmulator
             System.Diagnostics.Process.Start("shutdown", "-l");
         }
 
-        public void CommandOpenApplication(String app)
+        public void CommandOpenApplication()
         {
             // Notify the user of the action
-            SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.OPENING_APPLICATION, username, app));
+            SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.OPENING_APPLICATION, username, commandObject.ToString()));
 
             System.Diagnostics.Process proc = new System.Diagnostics.Process();
             proc.EnableRaisingEvents = false;
-            proc.StartInfo.FileName = app;
+            proc.StartInfo.FileName = commandObject.ToString();
             proc.Start();
         }
 
-        public void CommandCloseApplication(String app)
+        public void CommandCloseApplication()
         {
             // Notify the user of the action
-            SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.CLOSING_APPLICATION, username, app));
+            SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.CLOSING_APPLICATION, username, commandObject.ToString()));
 
             System.Diagnostics.Process[] procs = null;
             try
             {
-                procs = System.Diagnostics.Process.GetProcessesByName(app);
+                procs = System.Diagnostics.Process.GetProcessesByName(commandObject.ToString());
 
                 System.Diagnostics.Process close = procs[0];
 
@@ -121,27 +121,21 @@ namespace JarvisEmulator
 
         public void ProcessCommand()
         {
-            if (commandObject.Equals(actionManagerCommands.LOGOUT))
+            if (command.Equals(actionManagerCommands.LOGOUT))
             {
                 CommandLogout();
             }
-            if (commandObject.Equals(actionManagerCommands.UPDATE))
+            if (command.Equals(actionManagerCommands.UPDATE))
             {
                 CommandRSSUpdate();
             }
-            if (commandObject.Equals(actionManagerCommands.OPEN))
+            if (command.Equals(actionManagerCommands.OPEN))
             {
-                //gets the application name
-                command = command.Replace("OK Jarvis open", "");
-                //search through txt doc for the application location/.exe file
-                CommandOpenApplication(command);
+                CommandOpenApplication();
             }
-            if (commandObject.Equals(actionManagerCommands.CLOSE))
+            if (command.Equals(actionManagerCommands.CLOSE))
             {
-                //gets the application name
-                command = command.Replace("OK Jarvis close", "");
-                //search through txt doc for the application location/.exe file
-                CommandCloseApplication(command);
+                CommandCloseApplication();
             }
         }
 
