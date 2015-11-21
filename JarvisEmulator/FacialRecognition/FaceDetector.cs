@@ -169,7 +169,12 @@ namespace JarvisEmulator
 
                             // Determine the active user.
                             Guid userGuid = recognizer.Recognize(result);
-                            activeUser = users.Find(user => user.Guid == userGuid);
+                            
+                            lock (users)
+                            {
+                                activeUser = users.Find(user => user.Guid == userGuid);
+                            }
+
                         }
                     }
 
@@ -267,7 +272,10 @@ namespace JarvisEmulator
 
             if ( value.SaveToProfile )
             {
-                users = value.Users;
+                lock (users)
+                {
+                    users = value.Users;
+                }
                 pathToTrainingImagesFolder = value.PathToTrainingImages;
             }
 

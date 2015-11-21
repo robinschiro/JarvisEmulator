@@ -129,7 +129,7 @@ namespace JarvisEmulator
 
         public void OnNext(SpeechData value)
         {
-            command = value.CommandKey;
+            command = value.Command;
             commandObject = value.CommandValue;
         }
 

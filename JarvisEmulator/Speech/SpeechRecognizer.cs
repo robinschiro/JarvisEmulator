@@ -14,7 +14,7 @@ namespace JarvisEmulator
 
     public struct SpeechData
     {
-        public string CommandKey;
+        public string Command;
         public object CommandValue;
     }   
 
@@ -142,7 +142,7 @@ namespace JarvisEmulator
         private void PublishSpeechData()
         {
             SpeechData packet = new SpeechData();
-            packet.CommandKey= command;
+            packet.Command= command;
             packet.CommandValue = commandValue;
 
             SubscriptionManager.Publish(commandObserver, packet);
