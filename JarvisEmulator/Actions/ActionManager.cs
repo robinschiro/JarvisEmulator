@@ -21,7 +21,7 @@ namespace JarvisEmulator
         TAKEPICTURE
     }
 
-    public class ActionManager : IObservable<ActionData>, IObserver<SpeechData>
+    public class ActionManager : IObservable<ActionData>, IObserver<SpeechData>, IObserver<FrameData>
     {
         RSSManager rssManager;
         string command;
@@ -100,20 +100,6 @@ namespace JarvisEmulator
             }
         }
 
-        public void CommandLogout()
-        {
-            System.Diagnostics.Process.Start("shutdown", "-l");
-        }
-
-        public void OnNext(ConfigData value)
-        {
-            if (value.ActiveUser != null)
-            {
-                // Save the username every time it receives configdata
-                username = value.ActiveUser.ToString();
-            }
-        }
-
         public void CommandTakePhoto()
         {
 
@@ -131,16 +117,6 @@ namespace JarvisEmulator
         public void Obtain()
         {
 
-        }
-
-        public void OnError(Exception error)
-        {
-            return;
-        }
-
-        public void OnCompleted()
-        {
-            throw new NotImplementedException();
         }
 
         public void ProcessCommand()
@@ -174,20 +150,33 @@ namespace JarvisEmulator
 
         }
 
+        #region Observer Interface methods
+
         public void OnNext(SpeechData value)
         {
             command = value.Command;
             commandObject = value.CommandValue;
         }
 
+        public void OnNext(FrameData value)
+        {
+            if (value.ActiveUser != null)
+            {
+                // Save the username every time it receives configdata
+                username = value.ActiveUser.ToString();
+            }
+        }
+
         public void OnError(Exception error)
         {
-            throw new NotImplementedException();
+            return;
         }
 
         public void OnCompleted()
         {
             throw new NotImplementedException();
         }
+
+        #endregion
     }
 }

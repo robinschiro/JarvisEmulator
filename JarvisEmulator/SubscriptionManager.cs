@@ -44,7 +44,7 @@ namespace JarvisEmulator
         private void CreateSubscriptions()
         {
             // Create subscriptions to the FaceDetector.
-            faceDetector.Subscribe(configManager);
+            faceDetector.Subscribe(actionManager);
             faceDetector.Subscribe(userInterface);
             faceDetector.Subscribe(speechRecognizer);
 
@@ -58,8 +58,6 @@ namespace JarvisEmulator
 
             //Create subscriptions for the SpeechRecognizer
             speechRecognizer.Subscribe(actionManager);
-
-            configManager.Subscribe(actionManager); // For active user's username
 
             // Create subscriptions to the ActionManager.
             actionManager.Subscribe(speechConstructor);
