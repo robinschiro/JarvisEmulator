@@ -46,9 +46,9 @@ namespace JarvisEmulator
 
             //Adds commands to the recognizer's dictionary.
             List<String> commandKeys = new List<String>(); ;
-            if (ActiveUser != null)
+            if (activeUser != null)
             {
-                commandKeys = new List<String>(ActiveUser.CommandDictionary.Keys);
+                commandKeys = new List<String>(activeUser.CommandDictionary.Keys);
             }
             string[] appOpen = new string[commandKeys.Count];
             
