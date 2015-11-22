@@ -33,6 +33,7 @@ namespace JarvisEmulator
         string[] mainCommands;
         Grammar gr;
         Choices sList;
+        Grammar agr;
 
         private List<IObserver<SpeechData>> commandObserver = new List<IObserver<SpeechData>>();
 
@@ -68,11 +69,16 @@ namespace JarvisEmulator
                 return;
             }
         }
+        //Choices acommands;
 
         public void updateGrammar()
         {
-            Choices acommands = new Choices();
+            if (agr != null)
+            {
+                sRecognize.UnloadGrammar(agr);
+            }
 
+            Choices acommands = new Choices();
             //Adds commands to the recognizer's dictionary.
             List<String> commandKeys = new List<String>();
             if (activeUser != null)
@@ -98,7 +104,7 @@ namespace JarvisEmulator
 
             try
             {
-                Grammar agr = new Grammar(new GrammarBuilder(acommands));
+                agr = new Grammar(new GrammarBuilder(acommands));
                 sRecognize.LoadGrammar(agr);
             }
             catch (Exception ex)
@@ -158,7 +164,7 @@ namespace JarvisEmulator
         public void getCommandValClose()
         {
 
-            if (activeUser != null)
+            if (activeUser != null && activeUser.CommandDictionary.ContainsKey(command))
             {
 
                 if (activeUser.CommandDictionary[command].Contains(".exe"))
@@ -168,7 +174,7 @@ namespace JarvisEmulator
                 else
                     commandValue = activeUser.CommandDictionary[command];
             }
-            
+
         }
 
         public void swap()
