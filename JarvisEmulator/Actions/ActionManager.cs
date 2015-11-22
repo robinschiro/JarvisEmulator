@@ -18,7 +18,8 @@ namespace JarvisEmulator
         UPDATE,
         CLOSE,
         LOGOUT,
-        TAKEPICTURE
+        TAKEPICTURE,
+        GREET_USER
     }
 
     public class ActionManager : IObservable<ActionData>, IObserver<SpeechData>, IObserver<FrameData>
@@ -62,20 +63,27 @@ namespace JarvisEmulator
 
         public void CommandOpenApplication(String app)
         {
-            // Notify the user of the action
-            SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.OPENING_APPLICATION, username, app));
+            System.Diagnostics.Process[] procs = System.Diagnostics.Process.GetProcessesByName(app);
 
-            System.Diagnostics.Process proc = new System.Diagnostics.Process();
-            proc.EnableRaisingEvents = false;
-            proc.StartInfo.FileName = app;
-            proc.Start();
+            try
+            {
+                System.Diagnostics.Process proc = new System.Diagnostics.Process();
+                proc.EnableRaisingEvents = false;
+                proc.StartInfo.FileName = app;
+                proc.Start();
+
+                // Notify the user of the action
+                SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.OPENING_APPLICATION, username, app));
+            }
+            catch( Exception e )
+            {
+                // Notify the user that no action was taken
+                SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.ALREADY_OPENED, username, app));
+            }
         }
 
         public void CommandCloseApplication(String app)
         {
-            // Notify the user of the action
-            SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.CLOSING_APPLICATION, username, app));
-
             System.Diagnostics.Process[] procs = null;
             try
             {
@@ -85,8 +93,16 @@ namespace JarvisEmulator
 
                 if (!close.HasExited)
                 {
+                    // Notify the user of the action
+                    SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.CLOSING_APPLICATION, username, app));
+
                     close.Kill();
                 }
+            }
+            catch ( Exception e )
+            {
+                // Notify the user that no action was taken
+                SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.NO_APP_TO_CLOSE, username, app));
             }
             finally
             {
@@ -121,6 +137,9 @@ namespace JarvisEmulator
 
         public void ProcessCommand()
         {
+            if (commandObject == null)
+                return;
+
             if (commandObject.Equals(actionManagerCommands.LOGOUT))
             {
                 CommandLogout();
@@ -143,6 +162,11 @@ namespace JarvisEmulator
                 //search through txt doc for the application location/.exe file
                 CommandCloseApplication(command);
             }
+            if ((commandObject.Equals(actionManagerCommands.GREET_USER)))
+            {
+                // Notify the user of the action
+                SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.USER_ENTERED, username, ""));
+            }
         }
 
         public void DisplayError()
@@ -156,6 +180,8 @@ namespace JarvisEmulator
         {
             command = value.Command;
             commandObject = value.CommandValue;
+
+            ProcessCommand();
         }
 
         public void OnNext(FrameData value)

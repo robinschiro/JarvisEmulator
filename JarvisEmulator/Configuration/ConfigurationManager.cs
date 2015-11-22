@@ -25,7 +25,6 @@ namespace JarvisEmulator
         #region Configuration Members
 
         private tvProfile profile;
-        private User activeUser;
         private List<User> users = new List<User>();
         private string pathToTrainingImages;
         private bool haveJarvisGreetUsers;

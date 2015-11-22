@@ -29,6 +29,9 @@ namespace JarvisEmulator
         String command = "";
         object commandValue;
 
+        string[] similar;
+        string[] mainCommands;
+
         private List<IObserver<SpeechData>> commandObserver = new List<IObserver<SpeechData>>();
 
         public SpeechRecognizer()
@@ -36,9 +39,9 @@ namespace JarvisEmulator
             Choices sList = new Choices();
             
             //To prevent Jarvis from recognizing the wrong words.
-            string[] similar = {"ride Jarvis", "fly Jarvis","hide Jarvis","try Jarvis",
+            similar = new string[] {"ride Jarvis", "fly Jarvis","hide Jarvis","try Jarvis",
                 "my harvest" };
-            string[] mainCommands = { "hello Jarvis", "hi Jarvis","howdy Jarvis","OK Jarvis",
+            mainCommands = new string[] { "hello Jarvis", "hi Jarvis","howdy Jarvis","OK Jarvis",
                 "OK Jarvis goodbye","OK Jarvis bye","OK Jarvis exit", "OK Jarvis see you later",
                 "OK Jarvis log out", "OK Jarvis open", "OK Jarvis close","OK Jarvis update",
                 "OK Jarvis take my picture", "OK Jarvis snap", "OK Jarvis cheese", "OK Jarvis selfie"};
@@ -121,9 +124,10 @@ namespace JarvisEmulator
             Random random = new Random();
             int randomNumber = random.Next(0, 6);
 
-            if (command.StartsWith("hi Jarvis"))
+            if (command.StartsWith("hi Jarvis") || checkForSimilar( command ) )
             {
-                sSynth.Speak("Hello");
+                commandValue = actionManagerCommands.GREET_USER;
+                PublishSpeechData();
             }
 
             if (command.StartsWith("OK Jarvis"))
@@ -131,6 +135,12 @@ namespace JarvisEmulator
                 EnableListening();
             }
 
+        }
+
+        // REMOVE THISSSSSS IF THERE'S ANYTHING BETTER
+        private bool checkForSimilar(string command)
+        {
+            return similar.Contains(command);
         }
 
 

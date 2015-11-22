@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace JarvisEmulator
@@ -13,11 +14,18 @@ namespace JarvisEmulator
         // Speech synthesizer
         SpVoice verbalizer;
 
+        // Queue that holds the messages to be spoken
+        Queue<string> SpokenMessages = new Queue<string>();
+        // Thread that speaks the messages
+        Thread SpeechOutputThread;
+
+        private bool stopTalking = false;
+
         // Randomizer
         Random randomizer;
 
         // A list of different ways of greeting the user.
-        string[] greetingVariants = { "Hi,", "Hello,", "Good to see you,", "Nice to see you,", "It's always a plasure to see you," };
+        string[] greetingVariants = { "High,", "Hello,", "Good to see you,", "Nice to see you,", "It's always a plasure to see you," };
         // A list of different ways of notifying a log out.
         string[] logoutVariants = { "Good bye,", "See you next time,", "Have a nice day,", "Until next time," };
         // A list of different ways of notifying a warning.
@@ -27,9 +35,16 @@ namespace JarvisEmulator
         // A list of different ways of outputing the data.
         string[] notificationIntroductionDataOutput = { "About the information you requested,", "Here's what I found about what you asked, sir.", "Here's what I found.", "This should be it." };
         // A list of different ways of notifying when opening an application.
-        string[] openingAppVariants = { "" };
+        string[] openingAppVariants = { "opening", "I will open", "Here it is for you," };
+        // A list of different ways of notifying when opening an application.
+        string[] openedAlreadyAppVariants = { "already opened", "the application you requested is already opened", "I think I already did that" };
         // A list of different ways of notifying when closing an application.
-        string[] closingAppVariants = { "" };
+        string[] closingAppVariants = { "closing", "I will close", "No more of", "babye, " };
+        // A list of different ways of notifying when closing an application.
+        string[] noAppToCloseVariants = { "i can't find that application anywherem", "no application with that name opened", "Can't do the impossible, That application is not opened." };
+
+        // So it doesn't repeat twice the same random introduction
+        public int lastIndex = 0;
 
 
         public SpeechConstructor()
@@ -37,6 +52,10 @@ namespace JarvisEmulator
             // Initialize all variables
             verbalizer = new SpVoice();
             randomizer = new Random();
+
+            SpeechOutputThread = new Thread(this.ProcessSpokenMessages);
+
+            SpeechOutputThread.Start();
         }
 
         #region MODULE     
@@ -64,17 +83,72 @@ namespace JarvisEmulator
         {
             VoiceResponse(getRandomStringFromList(closingAppVariants) + application);
         }
-
-        private void VoiceResponse(string response)
+        private void NotOpeningApp(string application)
         {
-            verbalizer.Speak(response);
+            VoiceResponse(getRandomStringFromList(openedAlreadyAppVariants) + application);
+        }
+        private void NotClosingApp(string application)
+        {
+            VoiceResponse(getRandomStringFromList(noAppToCloseVariants) + application);
+        }
+
+        private bool VoiceResponse(string response)
+        {
+            if (!stopTalking)
+            {
+                // Put the response in the message queue
+                SpokenMessages.Enqueue(response);
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private void ProcessSpokenMessages()
+        {
+            // While the speech constructor is on
+            while(!stopTalking)
+            {
+                // If there's any message in the queue
+                if( SpokenMessages.Count > 0 )
+                {
+                    string message = SpokenMessages.Dequeue();
+
+                    verbalizer.Speak(message);
+                }
+                else
+                {
+                    Thread.Sleep(150);
+                }
+            }
+        }
+
+        private void StopProcessingMessages()
+        {
+            stopTalking = true;
+
+            SpeechOutputThread.Join();
         }
         #endregion
 
         #region UTILITIES
         private string getRandomStringFromList(string[] list)
         {
-            int randomIndex = randomizer.Next(list.Length);
+            int randomIndex;
+
+            while (true)
+            {
+                randomIndex = randomizer.Next(list.Length);
+
+                // Make sure the picked number is not the same as the last number
+                //  that increases the illusion of randomness on the user
+                if( randomIndex != lastIndex )
+                {
+                    lastIndex = randomIndex;
+                    break;
+                }
+            }
 
             return list[randomIndex];
         }
@@ -104,7 +178,13 @@ namespace JarvisEmulator
                     OpeningApp(notification.data);
                     break;
                 case NOTIFICATION_TYPE.CLOSING_APPLICATION:
-                    OpeningApp(notification.data);
+                    ClosingApp(notification.data);
+                    break;
+                case NOTIFICATION_TYPE.ALREADY_OPENED:
+                    NotOpeningApp(notification.data);
+                    break;
+                case NOTIFICATION_TYPE.NO_APP_TO_CLOSE:
+                    NotClosingApp(notification.data);
                     break;
             }
         }
