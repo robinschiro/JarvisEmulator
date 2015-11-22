@@ -124,20 +124,10 @@ namespace JarvisEmulator
 
         public void getCommandVal()
         {
-            List<String> commandKeys = new List<String>();
-            List<String> commandVal = new List<String>();
             if (activeUser != null)
             {
-                commandKeys = new List<String>(activeUser.CommandDictionary.Keys);
-                commandVal = new List<String>(activeUser.CommandDictionary.Values);
-            }
-            for (int i = 0; i < commandKeys.Count; i++)
-            {
-                if (command == commandKeys[i])
-                {
-                    commandValue = commandVal[i];
-                    break;
-                }
+
+                commandValue = activeUser.CommandDictionary[command];
             }
         }
 
