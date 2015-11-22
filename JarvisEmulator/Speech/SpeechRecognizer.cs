@@ -16,7 +16,7 @@ namespace JarvisEmulator
     {
         public string Command;
         public object CommandValue;
-    }   
+    }
 
     public class SpeechRecognizer : IObserver<FrameData>, IObservable<SpeechData>
     {
@@ -31,13 +31,15 @@ namespace JarvisEmulator
 
         string[] similar;
         string[] mainCommands;
+        Grammar gr;
+        Choices sList;
 
         private List<IObserver<SpeechData>> commandObserver = new List<IObserver<SpeechData>>();
 
         public SpeechRecognizer()
         {
-            Choices sList = new Choices();
-            
+            sList = new Choices();
+
             //To prevent Jarvis from recognizing the wrong words.
             similar = new string[] {"ride Jarvis", "fly Jarvis","hide Jarvis","try Jarvis",
                 "my harvest" };
@@ -45,32 +47,13 @@ namespace JarvisEmulator
                 "OK Jarvis goodbye","OK Jarvis bye","OK Jarvis exit", "OK Jarvis see you later",
                 "OK Jarvis log out", "OK Jarvis open", "OK Jarvis close","OK Jarvis update",
                 "OK Jarvis take my picture", "OK Jarvis snap", "OK Jarvis cheese", "OK Jarvis selfie"};
-            
-
-            //Adds commands to the recognizer's dictionary.
-            List<String> commandKeys = new List<String>();
-            if (activeUser != null)
-            {
-                commandKeys = new List<String>(activeUser.CommandDictionary.Keys);
-            }
-            string[] appOpen = new string[commandKeys.Count];
-            string[] update = new string[commandKeys.Count];
-            
-            for (int i = 0; i < commandKeys.Count; i++)
-            {
-                appOpen[i] = "OK Jarvis open" + commandKeys[i];
-                update[i] = "OK Jarvis update" + commandKeys[i];
-            }
-
             sList.Add(mainCommands);
             sList.Add(similar);
-            sList.Add(appOpen);
-            sList.Add(update);
 
             try
             {
 
-                Grammar gr = new Grammar(new GrammarBuilder(sList));
+                gr = new Grammar(new GrammarBuilder(sList));
 
                 sRecognize.RequestRecognizerUpdate();
                 sRecognize.LoadGrammar(gr);
@@ -86,15 +69,52 @@ namespace JarvisEmulator
             }
         }
 
+        public void updateGrammar()
+        {
+            Choices acommands = new Choices();
+
+            //Adds commands to the recognizer's dictionary.
+            List<String> commandKeys = new List<String>();
+            if (activeUser != null)
+            {
+                commandKeys = new List<String>(activeUser.CommandDictionary.Keys);
+            }
+            string[] appOpen = new string[commandKeys.Count];
+            string[] update = new string[commandKeys.Count];
+
+            for (int i = 0; i < commandKeys.Count; i++)
+            {
+
+                appOpen[i] = "OK Jarvis open " + commandKeys[i];
+                Debug.WriteLine("if it works it should be " + appOpen[i]);
+                update[i] = "OK Jarvis update" + commandKeys[i];
+            }
+
+
+            acommands.Add(appOpen);
+            acommands.Add(update);
+            try
+            {
+                Grammar agr = new Grammar(new GrammarBuilder(acommands));
+                sRecognize.LoadGrammar(agr);
+            }
+            catch
+            {
+
+            }
+
+        }
+
 
         public void EnableListening()
         {
             // string command = e.Result.Text;
-            
+
             if (command.StartsWith("OK Jarvis"))
             {
                 if (command.Contains("open"))
                 {
+                    command = command.Replace("OK Jarvis open ", "");
                     getCommandVal();
                     command = actionManagerCommands.OPEN.ToString();
                 }
@@ -124,9 +144,9 @@ namespace JarvisEmulator
 
         public void getCommandVal()
         {
+            Debug.WriteLine("this is what is in command " + command);
             if (activeUser != null)
             {
-
                 commandValue = activeUser.CommandDictionary[command];
             }
         }
@@ -144,13 +164,13 @@ namespace JarvisEmulator
         {
             command = e.Result.Text;
 
-            if ( e.Result.Confidence > 0.5 )
+            if (e.Result.Confidence > 0.5)
             {
-                if ( command.StartsWith("OK Jarvis") )
+                if (command.StartsWith("OK Jarvis"))
                 {
                     EnableListening();
                 }
-                else if ( command.StartsWith("hi Jarvis") )
+                else if (command.StartsWith("hi Jarvis"))
                 {
                     command = actionManagerCommands.GREET_USER.ToString();
                     PublishSpeechData();
@@ -181,7 +201,13 @@ namespace JarvisEmulator
 
         public void OnNext(FrameData user)
         {
+            User tempUser = activeUser;
             activeUser = user.ActiveUser;
+            if (activeUser != tempUser)
+            {
+                updateGrammar();
+            }
+
 
             // TODO: Update the vocabulary of Jarvis based on the current active user.
             // This update should only be made if the active user has changed.
