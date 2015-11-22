@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace JarvisEmulator
@@ -22,11 +23,13 @@ namespace JarvisEmulator
         GREET_USER
     }
 
-    public class ActionManager : IObservable<ActionData>, IObserver<SpeechData>, IObserver<FrameData>
+    public class ActionManager : IObservable<UserNotification>, IObserver<SpeechData>, IObserver<FrameData>
     {
         RSSManager rssManager;
         string command;
         object commandObject;
+
+        Thread rssManagerThread;
 
         #region Observer lists
 
@@ -39,8 +42,22 @@ namespace JarvisEmulator
 
         public ActionManager()
         {
-            rssManager = new RSSManager();
+            // Initialize the username
             username = "";
+
+            // Initialize the RSS Manager
+            rssManager = new RSSManager(BroadcastRSSResult);
+
+            // Initialize the RSS Manager Thread TODO: URL????
+            rssManagerThread = new Thread( rssManager.PublishRSSString );
+        }
+
+        public bool BroadcastRSSResult( RSSData info )
+        {
+            // Notify the user that no action was taken
+            SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.RSS_DATA, username, info.parsedString));
+
+            return true;
         }
 
         public IDisposable Subscribe(IObserver<ActionData> observer)
@@ -135,6 +152,11 @@ namespace JarvisEmulator
 
         }
 
+        // Use these two lines to make the rss manager parse the needed string and send it back
+        //rssManager.provideURL("whatever url rss");
+        //rssManagerThread.Start();
+        // TODO: Check that the rssManagerThread has ended when trying to start it again
+
         public void ProcessCommand()
         {
             if (commandObject == null)
@@ -143,7 +165,6 @@ namespace JarvisEmulator
                 SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.ERROR, username, "Command object is null."));
                 return;
             }
-
             if (commandObject.Equals(actionManagerCommands.LOGOUT))
             {
                 CommandLogout();

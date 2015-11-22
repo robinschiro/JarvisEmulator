@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -15,22 +17,45 @@ namespace JarvisEmulator
     }
 
 
-    public class RSSManager : IObservable<RSSData>, IObserver<ActionData>
+    public class RSSManager// : IObservable<RSSData>, IObserver<ActionData>
     {
         string url;
 
-        private List<IObserver<RSSData>> RSSObservers = new List<IObserver<RSSData>>();
-    
-   
-        private void PublishRSSString()
+        // Give a function that calls back when the output is ready when creating the rss manager
+        public RSSManager ( Func<RSSData, bool> actionManagerOutFunction )
         {
+            this.actionManagerOutFunction = actionManagerOutFunction;
+        }
+
+        Func<RSSData, bool> actionManagerOutFunction = null; 
+
+        //private List<IObserver<RSSData>> RSSObservers = new List<IObserver<RSSData>>();
+
+        // A url must be provided before calling the PublishRSSString function
+        public void provideURL( string url )
+        {
+            this.url = url;
+        }   
+
+        public void PublishRSSString()
+        {
+            // If no url is given. Stop inmediatelly
+            if (url == "")
+                return;
+
             RSSData info = new RSSData();
 
             info.parsedString = parseRss(url);
-            SubscriptionManager.Publish(RSSObservers, info);
+
+            // If the action manager has given you the bypassing function, just call it with the resulting info
+            //  The action manager will take it from here and send it to whoever needs it
+            if( actionManagerOutFunction != null )
+                actionManagerOutFunction(info);
+
+            url = "";
         }
 
-        public void OnCompleted()
+        /*public void OnCompleted()
         {
             throw new NotImplementedException();
         }
@@ -46,15 +71,15 @@ namespace JarvisEmulator
             {
                 url = value.inMessage;
             }
-        }
+        }*/
 
-        public IDisposable Subscribe( IObserver<RSSData> observer )
+        /*public IDisposable Subscribe( IObserver<RSSData> observer )
         {
            
             return SubscriptionManager.Subscribe(RSSObservers, observer);
-        }
+        }*/
 
-        public string parseRss( string url )
+        private string parseRss( string url )
         {
 
             XmlDocument rssXmlDoc = new XmlDocument();
@@ -107,10 +132,11 @@ namespace JarvisEmulator
                     string conditions = attr1.InnerXml;
                     XmlAttribute attr2 = attrColl["temp"];
                     string temperature = attr2.InnerXml;
-                    rssContent.Append(title + " Today is " + conditions + " with a temperature of " + temperature + " degrees Ferinheight ");
+                    rssContent.Append(title + " Today is " + conditions + " with a temperature of " + temperature + " degrees Fahrenheit ");
 
                 }
             }
+
             return rssContent.ToString();
         }
     }
