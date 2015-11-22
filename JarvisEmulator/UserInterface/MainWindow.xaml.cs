@@ -126,13 +126,14 @@ namespace JarvisEmulator
 
                 if ( true == dialog.Result )
                 { 
-                    // Update the key/value pair.
-                    object selectedUser = cboxUserSelection.SelectedItem;
                     if ( null != selectedUser )
                     {
-                        User user = (selectedUser as User);
-                        user.CommandDictionary.Remove(commandPair.Key);
-                        user.CommandDictionary[dialog.EntryOne] = dialog.EntryTwo;
+                        // Update the key/value pair.
+                        selectedUser.CommandDictionary.Remove(commandPair.Key);
+                        selectedUser.CommandDictionary[dialog.EntryOne] = dialog.EntryTwo;
+
+                        // Save to profile.
+                        PublishUIData(saveToProfile: true);
                     }
                 }
             }
@@ -146,10 +147,12 @@ namespace JarvisEmulator
             // Create the key/value pair.
             if ( true == dialog.Result )
             {
-                object selectedUser = cboxUserSelection.SelectedItem;
                 if ( null != selectedUser )
                 {
-                    (selectedUser as User).CommandDictionary[dialog.EntryOne] = dialog.EntryTwo;
+                    selectedUser.CommandDictionary[dialog.EntryOne] = dialog.EntryTwo;
+
+                    // Save to profile.
+                    PublishUIData(saveToProfile: true);
                 }
             }
         }
@@ -162,14 +165,22 @@ namespace JarvisEmulator
             {
                 KeyValuePair<string, string> commandPair = (KeyValuePair<string, string>)selectedItem;
 
-                // Update the key/value pair.
-                object selectedUser = cboxUserSelection.SelectedItem;
                 if ( null != selectedUser )
                 {
-                    (selectedUser as User).CommandDictionary.Remove(commandPair.Key);
+                    // Update the key/value pair.
+                    selectedUser.CommandDictionary.Remove(commandPair.Key);
+
+                    // Delete user's picture folder.
+                    string userFolder = Path.Combine(tboxTrainingImagesPath.Text, selectedUser.Guid.ToString());
+                    if ( Directory.Exists(userFolder) )
+                    {
+                        Directory.Delete(userFolder, true);
+                    }
+
+                    // Save to profile.
+                    PublishUIData(saveToProfile: true);
                 }
 
-                // TODO: Delete user's picture folder.
             }
         }
 

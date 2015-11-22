@@ -145,7 +145,7 @@ namespace JarvisEmulator
         public void getCommandVal()
         {
             Debug.WriteLine("this is what is in command " + command);
-            if (activeUser != null)
+            if (activeUser != null && activeUser.CommandDictionary.ContainsKey(command) )
             {
                 commandValue = activeUser.CommandDictionary[command];
             }
