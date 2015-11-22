@@ -154,7 +154,7 @@ namespace JarvisEmulator
         {
             command = e.Result.Text;
 
-            if ( e.Result.Confidence > 0.5 )
+            if ( e.Result.Confidence > 0.8 )
             {
                 if ( command.StartsWith("OK Jarvis") )
                 {
