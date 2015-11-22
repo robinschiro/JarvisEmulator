@@ -16,7 +16,7 @@ namespace JarvisEmulator
     {
         public string Command;
         public object CommandValue;
-    }   
+    }
 
     public class SpeechRecognizer : IObserver<FrameData>, IObservable<SpeechData>
     {
@@ -39,7 +39,7 @@ namespace JarvisEmulator
         public SpeechRecognizer()
         {
             sList = new Choices();
-            
+
             //To prevent Jarvis from recognizing the wrong words.
             similar = new string[] {"ride Jarvis", "fly Jarvis","hide Jarvis","try Jarvis",
                 "my harvest" };
@@ -49,7 +49,7 @@ namespace JarvisEmulator
                 "OK Jarvis take my picture", "OK Jarvis snap", "OK Jarvis cheese", "OK Jarvis selfie"};
             sList.Add(mainCommands);
             sList.Add(similar);
-            
+
             try
             {
 
@@ -87,7 +87,7 @@ namespace JarvisEmulator
             {
 
                 appOpen[i] = "OK Jarvis open " + commandKeys[i];
-                update[i] = "OK Jarvis update" + commandKeys[i];
+                update[i] = "OK Jarvis update " + commandKeys[i];
                 close[i] = "OK Jarvis close " + commandKeys[i];
             }
 
@@ -133,6 +133,7 @@ namespace JarvisEmulator
                 }
                 else if (command.Contains("update"))
                 {
+                    command = command.Replace("OK Jarvis update ", "");
                     getCommandVal();
                     command = actionManagerCommands.UPDATE.ToString();
                 }
@@ -148,8 +149,7 @@ namespace JarvisEmulator
 
         public void getCommandVal()
         {
-            Debug.WriteLine("this is what is in command " + command);
-            if (activeUser != null && activeUser.CommandDictionary.ContainsKey(command) )
+            if (activeUser != null && activeUser.CommandDictionary.ContainsKey(command))
             {
                 commandValue = activeUser.CommandDictionary[command];
             }
@@ -168,7 +168,7 @@ namespace JarvisEmulator
                 else
                     commandValue = activeUser.CommandDictionary[command];
             }
-            Debug.WriteLine("this is what is in command " + commandValue.ToString());
+            
         }
 
         public void swap()
@@ -184,7 +184,7 @@ namespace JarvisEmulator
         {
             command = e.Result.Text;
 
-            if ( e.Result.Confidence > 0.8 )
+            if (e.Result.Confidence > 0.8)
             {
                 if (command.StartsWith("OK Jarvis"))
                 {
