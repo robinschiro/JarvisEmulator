@@ -81,24 +81,27 @@ namespace JarvisEmulator
             }
             string[] appOpen = new string[commandKeys.Count];
             string[] update = new string[commandKeys.Count];
-            
+            string[] close = new string[commandKeys.Count];
+
             for (int i = 0; i < commandKeys.Count; i++)
             {
 
                 appOpen[i] = "OK Jarvis open " + commandKeys[i];
-                Debug.WriteLine("if it works it should be " + appOpen[i]);
                 update[i] = "OK Jarvis update" + commandKeys[i];
+                close[i] = "OK Jarvis close " + commandKeys[i];
             }
 
 
             acommands.Add(appOpen);
             acommands.Add(update);
+            acommands.Add(close);
+
             try
             {
                 Grammar agr = new Grammar(new GrammarBuilder(acommands));
                 sRecognize.LoadGrammar(agr);
             }
-            catch ( Exception ex )
+            catch (Exception ex)
             {
 
             }
@@ -109,7 +112,7 @@ namespace JarvisEmulator
         public void EnableListening()
         {
             // string command = e.Result.Text;
-            
+
             if (command.StartsWith("OK Jarvis"))
             {
                 if (command.Contains("open"))
@@ -124,7 +127,8 @@ namespace JarvisEmulator
                 }
                 else if (command.Contains("close"))
                 {
-                    getCommandVal();
+                    command = command.Replace("OK Jarvis close ", "");
+                    getCommandValClose();
                     command = actionManagerCommands.CLOSE.ToString();
                 }
                 else if (command.Contains("update"))
@@ -149,6 +153,22 @@ namespace JarvisEmulator
             {
                 commandValue = activeUser.CommandDictionary[command];
             }
+        }
+
+        public void getCommandValClose()
+        {
+
+            if (activeUser != null)
+            {
+
+                if (activeUser.CommandDictionary[command].Contains(".exe"))
+                {
+                    commandValue = activeUser.CommandDictionary[command].Remove(activeUser.CommandDictionary[command].Length - 4);
+                }
+                else
+                    commandValue = activeUser.CommandDictionary[command];
+            }
+            Debug.WriteLine("this is what is in command " + commandValue.ToString());
         }
 
         public void swap()
