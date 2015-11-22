@@ -262,7 +262,7 @@ namespace JarvisEmulator
             List<FileInfo> files = (new DirectoryInfo(pathUserTrainingFolder)).GetFiles().ToList<FileInfo>();
             if ( 0 == files.Count )
             {
-                fileName = "1";
+                fileName = "1.bmp";
             }
             else
             {

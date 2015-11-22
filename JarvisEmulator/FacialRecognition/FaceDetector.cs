@@ -126,20 +126,28 @@ namespace JarvisEmulator
             }
         }
 
+        // Process frames from the capture device.
+        // This function should be called on a thread separate from the main thread.
         private void PerformFrameProcessing()
         {
             while ( !stopFrameProcessing )
             {
-                GetCurrentFrame();
+                ProcessCurrentFrame();
                 Thread.Sleep(10);
             }
         }
 
-        // Retrieve a frame from the capture device, with faces optionally bounded by rectangles.
-        public void GetCurrentFrame( object state = null )
+        // Process the current frame from the capture device to determine the active user.
+        public void ProcessCurrentFrame( object state = null )
         {
-            // Get the current frame from capture device
-            grabber.QueryFrame();
+            // Verify that the frame grabber exists.
+            if ( null == grabber )
+            {
+                // Notify user that the capture device has not been initialized.
+                return;
+            }
+
+            // Retrieve the current frame.
             currentFrame = grabber.QueryFrame().Resize(320, 240, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
             Image<Gray, byte> result = null;
             BitmapSource frameBitmap = null;
@@ -159,7 +167,7 @@ namespace JarvisEmulator
                     lock ( trainingImages )
                     {
                         // Perform recognition on the result.
-                        if ( 0 != trainingImages.Count)
+                        if ( 0 != trainingImages.Count )
                         {
                             // Create a set of criteria for the recognizer.
                             MCvTermCriteria termCrit = new MCvTermCriteria(trainingImages.Count, 0.001);
@@ -174,7 +182,10 @@ namespace JarvisEmulator
                             {
                                 activeUser = users.Find(user => user.Guid == userGuid);
                             }
-
+                        }
+                        else
+                        {
+                            activeUser = null;
                         }
                     }
 
@@ -233,7 +244,7 @@ namespace JarvisEmulator
         // Retrieve the training images of all users from the training images folder.
         private void RetrieveTrainingImages()
         {
-            if ( null != pathToTrainingImagesFolder )
+            if ( null != pathToTrainingImagesFolder && Directory.Exists(pathToTrainingImagesFolder) )
             {
                 // Since the trainingImages lists is about to modifed, lock it.
                 lock ( trainingImages )
@@ -287,6 +298,10 @@ namespace JarvisEmulator
             if ( value.PerformCleanup )
             {
                 stopFrameProcessing = true;
+                if ( null != grabber )
+                {
+                    grabber.Dispose();
+                }
             }
         }
 

@@ -27,7 +27,7 @@ namespace JarvisEmulator
         private User activeUser;
 
         String command = "";
-        object commandValue;
+        object commandValue = "";
 
         string[] similar;
         string[] mainCommands;
@@ -54,15 +54,18 @@ namespace JarvisEmulator
                 commandKeys = new List<String>(activeUser.CommandDictionary.Keys);
             }
             string[] appOpen = new string[commandKeys.Count];
+            string[] update = new string[commandKeys.Count];
             
             for (int i = 0; i < commandKeys.Count; i++)
             {
                 appOpen[i] = "OK Jarvis open" + commandKeys[i];
+                update[i] = "OK Jarvis update" + commandKeys[i];
             }
 
             sList.Add(mainCommands);
             sList.Add(similar);
             sList.Add(appOpen);
+            sList.Add(update);
 
             try
             {
@@ -92,24 +95,27 @@ namespace JarvisEmulator
             {
                 if (command.Contains("open"))
                 {
-                    commandValue = actionManagerCommands.OPEN;
+                    getCommandVal();
+                    command = actionManagerCommands.OPEN.ToString();
                 }
-                if (command.Contains("log out"))
+                else if (command.Contains("log out"))
                 {
-                    commandValue = actionManagerCommands.LOGOUT;
+                    command = actionManagerCommands.LOGOUT.ToString();
                 }
-                if (command.Contains("close"))
+                else if (command.Contains("close"))
                 {
-                    commandValue = actionManagerCommands.CLOSE;
+                    getCommandVal();
+                    command = actionManagerCommands.CLOSE.ToString();
                 }
-                if (command.Contains("update"))
+                else if (command.Contains("update"))
                 {
-                    commandValue = actionManagerCommands.UPDATE;
+                    getCommandVal();
+                    command = actionManagerCommands.UPDATE.ToString();
                 }
-                if (command.Contains("take my picture") || command.Contains("snap") ||
+                else if (command.Contains("take my picture") || command.Contains("snap") ||
                     command.Contains("cheese") || command.Contains("selfie"))
                 {
-                    commandValue = actionManagerCommands.TAKEPICTURE;
+                    command = actionManagerCommands.TAKEPICTURE.ToString();
                 }
 
             }
@@ -117,12 +123,37 @@ namespace JarvisEmulator
             PublishSpeechData();
         }
 
+        public void getCommandVal()
+        {
+            List<String> commandKeys = new List<String>();
+            List<String> commandVal = new List<String>();
+            if (activeUser != null)
+            {
+                commandKeys = new List<String>(activeUser.CommandDictionary.Keys);
+                commandVal = new List<String>(activeUser.CommandDictionary.Values);
+            }
+            for (int i = 0; i < commandKeys.Count; i++)
+            {
+                if (command == commandKeys[i])
+                {
+                    commandValue = commandVal[i];
+                    break;
+                }
+            }
+        }
+
+        public void swap()
+        {
+            string temp;
+            temp = commandValue.ToString();
+
+            commandValue = command;
+            command = temp;
+        }
 
         private void SRecognize_SpeechRecognized(object sender, SpeechRecognizedEventArgs e)
         {
             command = e.Result.Text;
-            Random random = new Random();
-            int randomNumber = random.Next(0, 6);
 
             if (command.StartsWith("hi Jarvis") || checkForSimilar( command ) )
             {
@@ -152,7 +183,7 @@ namespace JarvisEmulator
         private void PublishSpeechData()
         {
             SpeechData packet = new SpeechData();
-            packet.Command= command;
+            packet.Command = command;
             packet.CommandValue = commandValue;
 
             SubscriptionManager.Publish(commandObserver, packet);
