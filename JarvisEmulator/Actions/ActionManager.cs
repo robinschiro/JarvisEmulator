@@ -148,19 +148,19 @@ namespace JarvisEmulator
             {
                 CommandLogout();
             }
-            if (command.Equals(actionManagerCommands.UPDATE))
+            if (command.Equals(actionManagerCommands.UPDATE.ToString()))
             {
                 CommandRSSUpdate();
             }
-            if (command.Equals(actionManagerCommands.OPEN))
+            if (command.Equals(actionManagerCommands.OPEN.ToString()))
             {
                 CommandOpenApplication("");
             }
-            if (command.Equals(actionManagerCommands.CLOSE))
+            if (command.Equals(actionManagerCommands.CLOSE.ToString()))
             {
                 CommandCloseApplication("");
             }
-            if ((commandObject.Equals(actionManagerCommands.GREET_USER)))
+            if ((command.Equals(actionManagerCommands.GREET_USER.ToString())))
             {
                 // Notify the user of the action
                 SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.USER_ENTERED, username, ""));

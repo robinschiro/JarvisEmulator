@@ -117,7 +117,6 @@ namespace JarvisEmulator
                 {
                     command = actionManagerCommands.TAKEPICTURE.ToString();
                 }
-
             }
             //ActionManager.ProcessCommand(command, commandObject);
             PublishSpeechData();
@@ -155,17 +154,15 @@ namespace JarvisEmulator
         {
             command = e.Result.Text;
 
-            if (command.StartsWith("hi Jarvis") || checkForSimilar( command ) )
-            {
-                commandValue = actionManagerCommands.GREET_USER;
-                PublishSpeechData();
-            }
-
             if (command.StartsWith("OK Jarvis"))
             {
                 EnableListening();
             }
-
+            else if (command.StartsWith("hi Jarvis") || checkForSimilar(command))
+            {
+                command = actionManagerCommands.GREET_USER.ToString();
+                PublishSpeechData();
+            }
         }
 
         // REMOVE THISSSSSS IF THERE'S ANYTHING BETTER
