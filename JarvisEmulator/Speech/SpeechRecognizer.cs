@@ -154,14 +154,17 @@ namespace JarvisEmulator
         {
             command = e.Result.Text;
 
-            if (command.StartsWith("OK Jarvis"))
+            if ( e.Result.Confidence > 0.5 )
             {
-                EnableListening();
-            }
-            else if (command.StartsWith("hi Jarvis") || checkForSimilar(command))
-            {
-                command = actionManagerCommands.GREET_USER.ToString();
-                PublishSpeechData();
+                if ( command.StartsWith("OK Jarvis") )
+                {
+                    EnableListening();
+                }
+                else if ( command.StartsWith("hi Jarvis") )
+                {
+                    command = actionManagerCommands.GREET_USER.ToString();
+                    PublishSpeechData();
+                }
             }
         }
 
