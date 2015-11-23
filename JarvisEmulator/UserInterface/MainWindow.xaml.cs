@@ -170,13 +170,6 @@ namespace JarvisEmulator
                     // Update the key/value pair.
                     selectedUser.CommandDictionary.Remove(commandPair.Key);
 
-                    // Delete user's picture folder.
-                    string userFolder = Path.Combine(tboxTrainingImagesPath.Text, selectedUser.Guid.ToString());
-                    if ( Directory.Exists(userFolder) )
-                    {
-                        Directory.Delete(userFolder, true);
-                    }
-
                     // Save to profile.
                     PublishUIData(saveToProfile: true);
                 }
@@ -211,20 +204,57 @@ namespace JarvisEmulator
 
         private void btnDeleteUser_Click( object sender, RoutedEventArgs e )
         {
-            if ( MessageBoxResult.Yes == MessageBox.Show("Are you sure you want to delete the selected user?", "Delete User", MessageBoxButton.YesNo, MessageBoxImage.Question) )
+            if ( null != selectedUser )
             {
-                // Remove the user from the collection.
-                users.Remove(SelectedUser);
+                if ( MessageBoxResult.Yes == MessageBox.Show("Are you sure you want to delete the selected user?", "Delete User", MessageBoxButton.YesNo, MessageBoxImage.Question) )
+                {
+                    // Remove the user from the collection.
+                    users.Remove(selectedUser);
 
-                // Update the combobox.
-                cboxUserSelection.SelectedIndex = 0;
+                    // Update the combobox.
+                    cboxUserSelection.SelectedIndex = 0;
 
-                // Update the public property.
-                object selectedItem = cboxUserSelection.SelectedItem;
-                SelectedUser = (null != selectedItem) ? (selectedItem as User) : null;
+                    // Update the public property.
+                    object selectedItem = cboxUserSelection.SelectedItem;
+                    SelectedUser = (null != selectedItem) ? (selectedItem as User) : null;
 
-                // Save to profile.
-                PublishUIData(saveToProfile: true);
+                    // Delete user's picture folder.
+                    string userFolder = Path.Combine(tboxTrainingImagesPath.Text, selectedUser.Guid.ToString());
+                    if ( Directory.Exists(userFolder) )
+                    {
+                        Directory.Delete(userFolder, true);
+                    }
+
+                    // Save to profile.
+                    PublishUIData(saveToProfile: true);
+                }
+            }
+        }
+
+        private void btnModifyUser_Click( object sender, RoutedEventArgs e )
+        {
+            if ( null != selectedUser )
+            {
+                TwoEntryDialog dialog = new TwoEntryDialog("Modify User", "First Name:", "Last Name:", selectedUser.FirstName, selectedUser.LastName);
+                dialog.ShowDialog();
+
+                if ( true == dialog.Result )
+                {
+                    // Update the key/value pair.
+                    SelectedUser.FirstName = dialog.EntryOne;
+                    SelectedUser.LastName = dialog.EntryTwo;
+
+                    // Remove the user from the observable collection and then re-add.
+                    // Unfortunately, this is required in order to trigger the binding update.
+                    users.Remove(selectedUser);
+                    users.Add(selectedUser);
+
+                    // The currently selected user should be the user that was just modified.
+                    cboxUserSelection.SelectedItem = selectedUser;
+                    
+                    // Save to profile.
+                    PublishUIData(saveToProfile: true);
+                }
             }
         }
 
@@ -255,9 +285,15 @@ namespace JarvisEmulator
         private void btnBrowse_Click( object sender, RoutedEventArgs e )
         {
             System.Windows.Forms.FolderBrowserDialog dialog = new System.Windows.Forms.FolderBrowserDialog();
+
+            // When the dialog is opened, have the folder that is currently referenced in the textbox be the folder
+            // that is open in the dialog.
             dialog.SelectedPath = tboxTrainingImagesPath.Text;
+
+            // Display the dialog.
             dialog.ShowDialog();
 
+            // Update the textbox based on the folder that was selected.
             tboxTrainingImagesPath.Text = dialog.SelectedPath;
 
             PublishUIData(saveToProfile: true, refreshTrainingImages: true);
@@ -373,7 +409,7 @@ namespace JarvisEmulator
         {
             currentFrame = value.Frame;
             facePicture = value.Face;
-            ActiveUser = value.ActiveUser;
+            this.ActiveUser = value.ActiveUser;
         }
 
         public IDisposable Subscribe( IObserver<UIData> observer )

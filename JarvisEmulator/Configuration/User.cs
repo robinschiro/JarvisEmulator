@@ -1,26 +1,35 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace JarvisEmulator
 {
-    public class User
+    public class User : INotifyPropertyChanged
     {
         private string firstName;
         public string FirstName
         {
             get { return firstName; }
-            set { firstName = value; }
+            set
+            {
+                firstName = value;
+                NotifyPropertyChanged("FirstName");
+            }
         }
 
         private string lastName;
         public string LastName
         {
             get { return lastName; }
-            set { lastName = value; }
+            set
+            {
+                lastName = value;
+                NotifyPropertyChanged("LastName");
+            }
         }
 
         // Used to uniquely identify the user.
@@ -33,6 +42,9 @@ namespace JarvisEmulator
 
         // Used to map user commands to either a) specfic URLS or b) specific applications.
         private ObservableDictionary<string, string> commandDictionary;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
         public ObservableDictionary<string, string> CommandDictionary
         {
             get { return commandDictionary; }
@@ -50,6 +62,14 @@ namespace JarvisEmulator
         public override string ToString()
         {
             return firstName + " " + lastName;
+        }
+
+        private void NotifyPropertyChanged( string propertyName = "" )
+        {
+            if ( PropertyChanged != null )
+            {
+                PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+            }
         }
 
     }

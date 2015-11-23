@@ -37,6 +37,63 @@
             <Setter Property="Width" Value="75" />
             <Setter Property="VerticalAlignment" Value="Bottom" />
         </Style>
+
+        <!-- Button Styles -->
+
+        <Style x:Key="AddButton" TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Button Style="{StaticResource CommandButton}">
+                            <Button.Content>
+                                <Image>
+                                    <Image.Source>
+                                        <BitmapImage UriSource="pack://application:,,,/JarvisEmulator;component/Resources/Sign_Add_Icon_256.png"/>
+                                    </Image.Source>
+                                </Image>
+                            </Button.Content>
+                        </Button>                                
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="DeleteButton" TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Button Style="{StaticResource CommandButton}">
+                            <Button.Content>
+                                <Image>
+                                    <Image.Source>
+                                        <BitmapImage UriSource="pack://application:,,,/JarvisEmulator;component/Resources/Delete_Icon_256.png"/>
+                                    </Image.Source>
+                                </Image>
+                            </Button.Content>
+                        </Button>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ModifyButton" TargetType="Button">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Button Style="{StaticResource CommandButton}">
+                            <Button.Content>
+                                <Image>
+                                    <Image.Source>
+                                        <BitmapImage UriSource="pack://application:,,,/JarvisEmulator;component/Resources/Edit_Icon_256.png"/>
+                                    </Image.Source>
+                                </Image>
+                            </Button.Content>
+                        </Button>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
     </Window.Resources>
     
     <Grid Name="pnlMain">
@@ -54,7 +111,7 @@
                    Grid.Column="0"/>
 
             <Label Name="lblSelectedUser"
-                   Content="{Binding SelectedUser}"
+                   Content="{Binding SelectedUser.FirstName}"
                    HorizontalAlignment="Left"
                    Grid.Column="1"/>
 
@@ -105,13 +162,57 @@
                               Header="User Settings" >
                         <StackPanel Name="pnlUserSettings">
 
-                            <Label Name="lblUserSelection"
-                                   Content="Selected User: " />
+                            <Grid Height="40">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition />
+                                    <ColumnDefinition />
+                                </Grid.ColumnDefinitions>
+
+                                <Label Name="lblUserSelection"
+                                       Content="Selected User: "
+                                       Margin="0, 10, 0, 0"
+                                       VerticalAlignment="Bottom"/>
+
+                                <Grid Grid.Column="1"
+                                      Width="100"
+                                      HorizontalAlignment="Right">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition />
+                                        <ColumnDefinition />
+                                        <ColumnDefinition />
+                                    </Grid.ColumnDefinitions>
+                                    
+                                    <Button Name="btnDeleteUser"
+                                            Style="{StaticResource DeleteButton}"                                        
+                                            Grid.Column="0"
+                                            ToolTip="Delete selected user"
+                                            Click="btnDeleteUser_Click">
+                                    </Button>
+
+                                    <Button Name="btnAddUser"
+                                            Style="{StaticResource AddButton}"
+                                            Grid.Column="1"
+                                            ToolTip="Create a new user"
+                                            Click="btnNewUser_Click"/>
+
+                                    <Button Name="btnModifyUser"
+                                            Style="{StaticResource ModifyButton}"                                    
+                                            Grid.Column="2"
+                                            ToolTip="Modify the name of the selected user"
+                                            Click="btnModifyUser_Click">
+                                    </Button>
+
+
+                                </Grid>
+
+                            </Grid>
+                            
                             <ComboBox Name="cboxUserSelection"
                                       ItemsSource="{Binding Users}"
                                       SelectionChanged="cboxUserSelection_SelectionChanged"/>
 
-                            <Grid Height="40">
+                            <Grid Height="40"
+                                  Margin="0,10,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition />
                                     <ColumnDefinition />
@@ -131,45 +232,23 @@
                                         <ColumnDefinition />
                                     </Grid.ColumnDefinitions>
                                     <Button Name="btnDeleteEntry"
-                                            Style="{StaticResource CommandButton}"                                        
+                                            Style="{StaticResource DeleteButton}"                                        
                                             Grid.Column="0"
                                             ToolTip="Delete selected command entry"
                                             Click="btnDeleteEntry_Click">
-                                        <Button.Content>
-                                            <Image>
-                                                <Image.Source>
-                                                    <BitmapImage UriSource="pack://application:,,,/JarvisEmulator;component/Resources/Delete_Icon_256.png"/>
-                                                </Image.Source>
-                                            </Image>
-                                        </Button.Content>
                                     </Button>
-
+                                    
                                     <Button Name="btnAddEntry"
-                                            Style="{StaticResource CommandButton}"                                        
+                                            Style="{StaticResource AddButton}"
                                             Grid.Column="1"
                                             ToolTip="Add command entry"
-                                            Click="btnAddEntry_Click">
-                                        <Button.Content>
-                                            <Image>
-                                                <Image.Source>
-                                                    <BitmapImage UriSource="pack://application:,,,/JarvisEmulator;component/Resources/Sign_Add_Icon_256.png"/>
-                                                </Image.Source>
-                                            </Image>
-                                        </Button.Content>
-                                    </Button>
+                                            Click="btnAddEntry_Click"/>
 
                                     <Button Name="btnModifyEntry"
-                                            Style="{StaticResource CommandButton}"                                    
+                                            Style="{StaticResource ModifyButton}"                                    
                                             Grid.Column="2"
                                             ToolTip="Modify selected command entry"
                                             Click="btnModifyEntry_Click">
-                                        <Button.Content>
-                                            <Image>
-                                                <Image.Source>
-                                                    <BitmapImage UriSource="pack://application:,,,/JarvisEmulator;component/Resources/Edit_Icon_256.png"/>
-                                                </Image.Source>
-                                            </Image>
-                                        </Button.Content>
                                     </Button>
 
 
@@ -207,20 +286,8 @@
                                 <Button Name="btnTrainUser"
                                     Style="{StaticResource NormalButton}"
                                     Content="Train User"
-                                    Grid.Column="0"
-                                    Click="btnTrainUser_Click"/>
-
-                                <Button Name="btnNewUser"
-                                    Style="{StaticResource NormalButton}"
-                                    Content="New User"
                                     Grid.Column="1"
-                                    Click="btnNewUser_Click"/>
-
-                                <Button Name="btnDeleteUser"
-                                    Style="{StaticResource NormalButton}"
-                                    Content="Delete User"
-                                    Grid.Column="2"
-                                    Click="btnDeleteUser_Click"/>
+                                    Click="btnTrainUser_Click"/>
 
                             </Grid>
                         </StackPanel>
@@ -250,7 +317,7 @@
                                Grid.Column="0"/>
 
                         <Label Name="lblActiveUser"
-                               Content="{Binding ActiveUser}"
+                               Content="{Binding ActiveUser.FirstName}"
                                HorizontalAlignment="Left"
                                Grid.Column="1" />
 
