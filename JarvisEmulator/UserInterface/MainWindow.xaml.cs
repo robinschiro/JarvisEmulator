@@ -103,15 +103,83 @@ namespace JarvisEmulator
 
         #region Events
 
-        private void cboxUserSelection_SelectionChanged( object sender = null, SelectionChangedEventArgs e = null)
+        #region User and Command Modification
+
+        private void btnDeleteUser_Click( object sender, RoutedEventArgs e )
         {
-            // Update the binding of the Commands Listview.
-            object selectedItem = cboxUserSelection.SelectedItem;
-            if ( null != selectedItem )
+            if ( null != selectedUser )
             {
-                SelectedUser = selectedItem as User;
-            }           
+                if ( MessageBoxResult.Yes == MessageBox.Show("Are you sure you want to delete the selected user?", "Delete User", MessageBoxButton.YesNo, MessageBoxImage.Question) )
+                {
+                    // Remove the user from the collection.
+                    users.Remove(selectedUser);
+
+                    // Update the combobox.
+                    cboxUserSelection.SelectedIndex = 0;
+
+                    // Update the public property.
+                    object selectedItem = cboxUserSelection.SelectedItem;
+                    SelectedUser = (null != selectedItem) ? (selectedItem as User) : null;
+
+                    // Delete user's picture folder.
+                    string userFolder = Path.Combine(tboxTrainingImagesPath.Text, selectedUser.Guid.ToString());
+                    if ( Directory.Exists(userFolder) )
+                    {
+                        Directory.Delete(userFolder, true);
+                    }
+
+                    // Save to profile.
+                    PublishUIData(saveToProfile: true);
+                }
+            }
         }
+
+        private void btnModifyUser_Click( object sender, RoutedEventArgs e )
+        {
+            if ( null != selectedUser )
+            {
+                TwoEntryDialog dialog = new TwoEntryDialog("Modify User", "First Name:", "Last Name:", selectedUser.FirstName, selectedUser.LastName);
+                dialog.ShowDialog();
+
+                if ( true == dialog.Result )
+                {
+                    // Update the key/value pair.
+                    SelectedUser.FirstName = dialog.EntryOne;
+                    SelectedUser.LastName = dialog.EntryTwo;
+
+                    // Remove the user from the observable collection and then re-add.
+                    // Unfortunately, this is required in order to trigger the binding update.
+                    users.Remove(selectedUser);
+                    users.Add(selectedUser);
+
+                    // The currently selected user should be the user that was just modified.
+                    cboxUserSelection.SelectedItem = selectedUser;
+
+                    // Save to profile.
+                    PublishUIData(saveToProfile: true);
+                }
+            }
+        }
+
+        private void btnNewUser_Click( object sender, RoutedEventArgs e )
+        {
+            TwoEntryDialog dialog = new TwoEntryDialog("Create User", "First Name:", "Last Name:");
+            dialog.ShowDialog();
+
+            if ( true == dialog.Result )
+            {
+                // Add the new user to the collection of users.
+                User newUser = new User(Guid.NewGuid(), dialog.EntryOne, dialog.EntryTwo, new ObservableDictionary<string, string>());
+                users.Add(newUser);
+
+                // Make this user the currently selected user.
+                cboxUserSelection.SelectedItem = newUser;
+
+                // Save to profile.
+                PublishUIData(saveToProfile: true);
+            }
+        }
+
 
         private void btnModifyEntry_Click( object sender, RoutedEventArgs e )
         {
@@ -177,6 +245,10 @@ namespace JarvisEmulator
             }
         }
 
+        #endregion
+
+        #region Training
+
         private void btnTrainUser_Click( object sender, RoutedEventArgs e )
         {
             // Send the user to the Video Feed tab and lock him in there until he clicks "Finish".
@@ -195,6 +267,23 @@ namespace JarvisEmulator
             }
         }
 
+        // Take a picture of the active user and store it in the training images folder of the selected user.
+        private void btnSnapshot_Click( object sender, RoutedEventArgs e )
+        {
+            int numFiles, maxFileNum;
+            string pathUserTrainingFolder = Path.Combine(tboxTrainingImagesPath.Text, selectedUser.Guid.ToString());
+
+            if ( AnalyzeTrainingImagesFolder(selectedUser, out numFiles, out maxFileNum) )
+            {
+                // Store a picture of the face provided by the latest frame data packet.
+                if ( null != facePicture )
+                {
+                    facePicture.Save(Path.Combine(pathUserTrainingFolder, (maxFileNum + 1) + ".bmp"));
+                    lblNumberSnapshots.Content = numFiles + 1;
+                }
+            }
+        }
+
         private void btnFinish_Click( object sender, RoutedEventArgs e )
         {
             ToggleTrainingMode(false);
@@ -202,78 +291,15 @@ namespace JarvisEmulator
             PublishUIData(refreshTrainingImages: true);
         }
 
-        private void btnDeleteUser_Click( object sender, RoutedEventArgs e )
+        #endregion
+
+        private void cboxUserSelection_SelectionChanged( object sender = null, SelectionChangedEventArgs e = null )
         {
-            if ( null != selectedUser )
+            // Update the binding of the Commands Listview.
+            object selectedItem = cboxUserSelection.SelectedItem;
+            if ( null != selectedItem )
             {
-                if ( MessageBoxResult.Yes == MessageBox.Show("Are you sure you want to delete the selected user?", "Delete User", MessageBoxButton.YesNo, MessageBoxImage.Question) )
-                {
-                    // Remove the user from the collection.
-                    users.Remove(selectedUser);
-
-                    // Update the combobox.
-                    cboxUserSelection.SelectedIndex = 0;
-
-                    // Update the public property.
-                    object selectedItem = cboxUserSelection.SelectedItem;
-                    SelectedUser = (null != selectedItem) ? (selectedItem as User) : null;
-
-                    // Delete user's picture folder.
-                    string userFolder = Path.Combine(tboxTrainingImagesPath.Text, selectedUser.Guid.ToString());
-                    if ( Directory.Exists(userFolder) )
-                    {
-                        Directory.Delete(userFolder, true);
-                    }
-
-                    // Save to profile.
-                    PublishUIData(saveToProfile: true);
-                }
-            }
-        }
-
-        private void btnModifyUser_Click( object sender, RoutedEventArgs e )
-        {
-            if ( null != selectedUser )
-            {
-                TwoEntryDialog dialog = new TwoEntryDialog("Modify User", "First Name:", "Last Name:", selectedUser.FirstName, selectedUser.LastName);
-                dialog.ShowDialog();
-
-                if ( true == dialog.Result )
-                {
-                    // Update the key/value pair.
-                    SelectedUser.FirstName = dialog.EntryOne;
-                    SelectedUser.LastName = dialog.EntryTwo;
-
-                    // Remove the user from the observable collection and then re-add.
-                    // Unfortunately, this is required in order to trigger the binding update.
-                    users.Remove(selectedUser);
-                    users.Add(selectedUser);
-
-                    // The currently selected user should be the user that was just modified.
-                    cboxUserSelection.SelectedItem = selectedUser;
-                    
-                    // Save to profile.
-                    PublishUIData(saveToProfile: true);
-                }
-            }
-        }
-
-        private void btnNewUser_Click( object sender, RoutedEventArgs e )
-        {
-            TwoEntryDialog dialog = new TwoEntryDialog("Create User", "First Name:", "Last Name:");
-            dialog.ShowDialog();
-
-            if ( true == dialog.Result )
-            {
-                // Add the new user to the collection of users.
-                User newUser = new User(Guid.NewGuid(), dialog.EntryOne, dialog.EntryTwo, new ObservableDictionary<string, string>());
-                users.Add(newUser);
-
-                // Make this user the currently selected user.
-                cboxUserSelection.SelectedItem = newUser;
-
-                // Save to profile.
-                PublishUIData(saveToProfile: true);
+                SelectedUser = selectedItem as User;
             }
         }
 
@@ -299,39 +325,6 @@ namespace JarvisEmulator
             PublishUIData(saveToProfile: true, refreshTrainingImages: true);
         }
 
-        private void btnSnapshot_Click( object sender, RoutedEventArgs e )
-        {
-            string pathUserTrainingFolder = Path.Combine(tboxTrainingImagesPath.Text, selectedUser.Guid.ToString());
-            string fileName = String.Empty;
-
-            // Retrieve the name of the latest picture to be saved in this folder.
-            // The new file name should be incremented by one.
-            List<FileInfo> files = (new DirectoryInfo(pathUserTrainingFolder)).GetFiles().ToList<FileInfo>();
-            if ( 0 == files.Count )
-            {
-                fileName = "1.bmp";
-            }
-            else
-            {
-                try
-                {
-                    List<int> fileNameInts = fileNameInts = files.Select(file => Convert.ToInt32(Path.GetFileNameWithoutExtension(file.Name))).ToList();
-                    fileName = (fileNameInts.Max() + 1) + ".bmp";
-                }
-                catch
-                {
-                    MessageBox.Show("Training images folder has invalid files. Please clear this directory or select a new one.");
-                }
-            }
-
-            // Store a picture of the face that is contained within the first rectangle of the rectangle list.
-            if ( null != facePicture )
-            {
-                facePicture.Save(Path.Combine(pathUserTrainingFolder, fileName));
-            }
-
-        }
-
         private void Window_Closing( object sender, CancelEventArgs e )
         {
             PublishUIData(saveToProfile: true, performCleanup: true);
@@ -339,6 +332,45 @@ namespace JarvisEmulator
 
 
         #endregion
+
+        // Retrieve the name of the latest picture to be saved in this folder.
+        // The new file name should be incremented by one.
+        private bool AnalyzeTrainingImagesFolder( User user, out int numFiles, out int nextFileNum )
+        {
+            // Initialize out variables.
+            numFiles = 0;
+            nextFileNum = 1;
+
+            string pathUserTrainingFolder = Path.Combine(tboxTrainingImagesPath.Text, user.Guid.ToString());
+
+            if ( Directory.Exists(pathUserTrainingFolder) )
+            {
+                List<FileInfo> files = (new DirectoryInfo(pathUserTrainingFolder)).GetFiles().ToList<FileInfo>();
+                if ( 0 == files.Count )
+                {
+                    // Indicate success.
+                    return true;
+                }
+                else
+                {
+                    try
+                    {
+                        numFiles = files.Count;
+                        List<int> fileNameInts = files.Select(file => Convert.ToInt32(Path.GetFileNameWithoutExtension(file.Name))).ToList();
+                        nextFileNum = fileNameInts.Max();
+
+                        // Indicate success.
+                        return true;
+                    }
+                    catch ( Exception ex )
+                    {
+                        MessageBox.Show("Training images folder has invalid files. Please clear this directory or select a new one.");
+                    }
+                }
+            }
+
+            return false;
+        }
 
         private void ToggleTrainingMode( bool on )
         {
@@ -353,6 +385,11 @@ namespace JarvisEmulator
                 message = "You are now in Training Mode. The Selected User should pose in front of the webcam " +
                           "at various angles and perhaps in various lighting conditions. For each pose, click the '" +
                           btnSnapshot.Content + "' button. When you are finished, press the '" + btnFinish.Content + "' button.";
+
+                // Update the label indicating the number of images that the user has.
+                int numFiles, maxFileNum;
+                AnalyzeTrainingImagesFolder(selectedUser, out numFiles, out maxFileNum);
+                lblNumberSnapshots.Content = numFiles;
             }
             else
             {
