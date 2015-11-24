@@ -5,16 +5,11 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace JarvisEmulator
 {
-    public struct ActionData
-    {
-        public string inMessage;
-        public string outMessage;
-    }
-
-    public enum actionManagerCommands
+    public enum Command
     {
         OPEN,
         UPDATE,
@@ -26,31 +21,33 @@ namespace JarvisEmulator
 
     public class ActionManager : IObservable<UserNotification>, IObserver<SpeechData>, IObserver<FrameData>
     {
-        RSSManager rssManager;
-        string command;
-        object commandObject;
+        #region Private Members
 
-        Thread rssManagerThread;
+        #region RSS Management
+
+        private RSSManager rssManager;
+        private Thread rssManagerThread;
+
+        #endregion
 
         #region Observer lists
 
         private List<IObserver<UserNotification>> userNotificationObservers = new List<IObserver<UserNotification>>();
 
         #endregion
-        
+
+        #endregion
+
         // Username for greeting the user
-        private string username;
+        private string username = "";
 
         public ActionManager()
         {
-            // Initialize the username
-            username = "";
-
             // Initialize the RSS Manager
             rssManager = new RSSManager(BroadcastRSSResult);
 
             // Initialize the RSS Manager Thread TODO: URL????
-            rssManagerThread = new Thread( rssManager.PublishRSSString );
+            rssManagerThread = new Thread(rssManager.PublishRSSString);
         }
 
         public bool BroadcastRSSResult( RSSData info )
@@ -61,12 +58,7 @@ namespace JarvisEmulator
             return true;
         }
 
-        public IDisposable Subscribe(IObserver<ActionData> observer)
-        {
-            return null;
-        }
-
-        public IDisposable Subscribe(IObserver<UserNotification> observer)
+        public IDisposable Subscribe( IObserver<UserNotification> observer )
         {
             return SubscriptionManager.Subscribe(userNotificationObservers, observer);
         }
@@ -76,26 +68,28 @@ namespace JarvisEmulator
             // Notify the user of the action
             SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.LOG_OUT, username));
 
-            Process.Start("shutdown", "-l");
+            if ( MessageBoxResult.Yes == MessageBox.Show("Are you sure you want to log out? All applications will be closed.", "Are you sure?", MessageBoxButton.YesNo) )
+            {
+                Process.Start("shutdown", "-l");
+            }
         }
 
         public void CommandOpenApplication( string app )
         {
             Process proc = new Process();
-            string appName = commandObject.ToString(); ;
 
-            if (appName.Contains(".exe"))
+            if ( app.Contains(".exe") )
             {
-                appName = appName.Remove(appName.Length - 4);
+                app = app.Remove(app.Length - 4);
             }
 
-            Process[] procname = Process.GetProcessesByName(appName);
+            Process[] procname = Process.GetProcessesByName(app);
             try
             {
-                if (procname.Length == 0)//it's not yet open
+                if ( procname.Length == 0 )//it's not yet open
                 {
                     proc.EnableRaisingEvents = false;
-                    proc.StartInfo.FileName = commandObject.ToString();
+                    proc.StartInfo.FileName = app;
                     proc.Start();
                     // Notify the user of the action
                     SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.OPENING_APPLICATION, username, app));
@@ -118,11 +112,11 @@ namespace JarvisEmulator
             Process[] procs = null;
             try
             {
-                procs = Process.GetProcessesByName(commandObject.ToString());
+                procs = Process.GetProcessesByName(app);
 
                 Process close = procs[0];
 
-                if (!close.HasExited)
+                if ( !close.HasExited )
                 {
                     // Notify the user of the action
                     SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.CLOSING_APPLICATION, username, app));
@@ -137,9 +131,9 @@ namespace JarvisEmulator
             }
             finally
             {
-                if (procs != null)
+                if ( procs != null )
                 {
-                    foreach (Process p in procs)
+                    foreach ( Process p in procs )
                     {
                         p.Dispose();
                     }
@@ -152,9 +146,9 @@ namespace JarvisEmulator
 
         }
 
-        public void CommandRSSUpdate()
+        public void CommandRSSUpdate( string URL )
         {
-
+            rssManager.provideURL(URL);
         }
 
         public void CommandQuestionAsked()
@@ -171,34 +165,57 @@ namespace JarvisEmulator
         //rssManagerThread.Start();
         // TODO: Check that the rssManagerThread has ended when trying to start it again
 
-        public void ProcessCommand()
+        public void ProcessCommand( Command command, string commandValue )
         {
-            if (commandObject == null)
+            if ( null == commandValue )
             {
                 // Notify the user of the action
                 SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.ERROR, username, "Command object is null."));
                 return;
             }
-            if (command.Equals(actionManagerCommands.LOGOUT.ToString()))
+
+            switch ( command )
             {
-                CommandLogout();
-            }
-            if (command.Equals(actionManagerCommands.UPDATE.ToString()))
-            {
-                CommandRSSUpdate();
-            }
-            if (command.Equals(actionManagerCommands.OPEN.ToString()))
-            {
-                CommandOpenApplication("");
-            }
-            if (command.Equals(actionManagerCommands.CLOSE.ToString()))
-            {
-                CommandCloseApplication("");
-            }
-            if ((command.Equals(actionManagerCommands.GREET_USER.ToString())))
-            {
-                // Notify the user of the action
-                SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.USER_ENTERED, username, ""));
+                case Command.LOGOUT:
+                {
+                    CommandLogout();
+
+                    break;
+                }
+
+                case Command.UPDATE:
+                {
+                    CommandRSSUpdate(commandValue);
+
+                    break;
+                }
+
+                case Command.OPEN:
+                {
+                    CommandOpenApplication(commandValue);
+
+                    break;
+                }
+
+                case Command.CLOSE:
+                {
+                    CommandCloseApplication(commandValue);
+
+                    break;
+                }
+
+                case Command.GREET_USER:
+                {
+                    // Notify the user of the action
+                    SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.USER_ENTERED, username, ""));
+
+                    break;
+                }
+
+                default:
+                {
+                    break;
+                }
             }
         }
 
@@ -209,24 +226,21 @@ namespace JarvisEmulator
 
         #region Observer Interface methods
 
-        public void OnNext(SpeechData value)
+        public void OnNext( SpeechData value )
         {
-            command = value.Command;
-            commandObject = value.CommandValue;
-
-            ProcessCommand();
+            ProcessCommand(value.Command, value.CommandValue);
         }
 
-        public void OnNext(FrameData value)
+        public void OnNext( FrameData value )
         {
-            if (value.ActiveUser != null)
+            if ( value.ActiveUser != null )
             {
                 // Save the username every time it receives configdata
                 username = value.ActiveUser.ToString();
             }
         }
 
-        public void OnError(Exception error)
+        public void OnError( Exception error )
         {
             return;
         }

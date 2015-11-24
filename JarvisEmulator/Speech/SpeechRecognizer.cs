@@ -14,8 +14,8 @@ namespace JarvisEmulator
 
     public struct SpeechData
     {
-        public string Command;
-        public object CommandValue;
+        public Command Command;
+        public string CommandValue;
     }
 
     public class SpeechRecognizer : IObserver<FrameData>, IObservable<SpeechData>
@@ -26,8 +26,8 @@ namespace JarvisEmulator
         private List<Word> words = new List<Word>();
         private User activeUser;
 
-        String command = "";
-        object commandValue = "";
+        string command = "";
+        string commandValue = "";
 
         string[] similar;
         string[] mainCommands;
@@ -116,62 +116,73 @@ namespace JarvisEmulator
 
         public void EnableListening()
         {
+            Command commandEnum = 0;
+            string commandValueFunction = String.Empty;
+
             if (command.StartsWith("OK Jarvis"))
             {
                 if (command.Contains("open"))
                 {
                     command = command.Replace("OK Jarvis open ", "");
-                    getCommandVal();
-                    command = actionManagerCommands.OPEN.ToString();
+                    commandEnum = Command.OPEN;
+                    commandValueFunction = getCommandVal();
                 }
                 else if (command.Contains("log out"))
                 {
-                    command = actionManagerCommands.LOGOUT.ToString();
+                    commandEnum = Command.LOGOUT;
                 }
                 else if (command.Contains("close"))
                 {
                     command = command.Replace("OK Jarvis close ", "");
-                    getCommandValClose();
-                    command = actionManagerCommands.CLOSE.ToString();
+                    commandValueFunction = getCommandValClose();
+                    commandEnum = Command.CLOSE;
                 }
                 else if (command.Contains("update"))
                 {
                     command = command.Replace("OK Jarvis update ", "");
-                    getCommandVal();
-                    command = actionManagerCommands.UPDATE.ToString();
+                    commandValueFunction = getCommandVal();
+                    commandEnum = Command.UPDATE;
                 }
                 else if (command.Contains("take my picture") || command.Contains("snap") ||
                     command.Contains("cheese") || command.Contains("selfie"))
                 {
-                    command = actionManagerCommands.TAKEPICTURE.ToString();
+                    commandEnum = Command.TAKEPICTURE;
                 }
             }
 
-            PublishSpeechData();
+            PublishSpeechData(commandEnum, commandValueFunction);
         }
 
-        public void getCommandVal()
+        public string getCommandVal()
         {
             if (activeUser != null && activeUser.CommandDictionary.ContainsKey(command))
             {
                 commandValue = activeUser.CommandDictionary[command];
+                return commandValue;
             }
+
+            return String.Empty;
         }
 
-        public void getCommandValClose()
+        public string getCommandValClose()
         {
 
             if (activeUser != null && activeUser.CommandDictionary.ContainsKey(command))
             {
 
-                if (activeUser.CommandDictionary[command].Contains(".exe"))
+                if ( activeUser.CommandDictionary[command].Contains(".exe") )
                 {
                     commandValue = activeUser.CommandDictionary[command].Remove(activeUser.CommandDictionary[command].Length - 4);
                 }
                 else
+                {
                     commandValue = activeUser.CommandDictionary[command];
+                }
+
+                return commandValue;
             }
 
+            return String.Empty;
         }
 
         public void swap()
@@ -195,8 +206,8 @@ namespace JarvisEmulator
                 }
                 else if (command.StartsWith("hi Jarvis"))
                 {
-                    command = actionManagerCommands.GREET_USER.ToString();
-                    PublishSpeechData();
+                    Command commandEnum = Command.GREET_USER;
+                    PublishSpeechData(commandEnum, "");
                 }
             }
         }
@@ -213,7 +224,7 @@ namespace JarvisEmulator
             return SubscriptionManager.Subscribe(commandObserver, observer);
         }
 
-        private void PublishSpeechData()
+        private void PublishSpeechData( Command command, string commandValue )
         {
             SpeechData packet = new SpeechData();
             packet.Command = command;
