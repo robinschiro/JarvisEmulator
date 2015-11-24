@@ -76,7 +76,7 @@ namespace JarvisEmulator
             // Notify the user of the action
             SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.LOG_OUT, username));
 
-            System.Diagnostics.Process.Start("shutdown", "-l");
+            Process.Start("shutdown", "-l");
         }
 
         public void CommandOpenApplication( string app )
@@ -179,7 +179,7 @@ namespace JarvisEmulator
                 SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.ERROR, username, "Command object is null."));
                 return;
             }
-            if (commandObject.Equals(actionManagerCommands.LOGOUT))
+            if (command.Equals(actionManagerCommands.LOGOUT.ToString()))
             {
                 CommandLogout();
             }
