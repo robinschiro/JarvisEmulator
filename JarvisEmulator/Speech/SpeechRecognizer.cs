@@ -69,7 +69,6 @@ namespace JarvisEmulator
                 return;
             }
         }
-        //Choices acommands;
 
         public void updateGrammar()
         {
@@ -117,8 +116,6 @@ namespace JarvisEmulator
 
         public void EnableListening()
         {
-            // string command = e.Result.Text;
-
             if (command.StartsWith("OK Jarvis"))
             {
                 if (command.Contains("open"))
@@ -149,7 +146,7 @@ namespace JarvisEmulator
                     command = actionManagerCommands.TAKEPICTURE.ToString();
                 }
             }
-            //ActionManager.ProcessCommand(command, commandObject);
+
             PublishSpeechData();
         }
 

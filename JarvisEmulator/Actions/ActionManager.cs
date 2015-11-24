@@ -115,12 +115,12 @@ namespace JarvisEmulator
 
         public void CommandCloseApplication( string app )
         {
-            System.Diagnostics.Process[] procs = null;
+            Process[] procs = null;
             try
             {
-                procs = System.Diagnostics.Process.GetProcessesByName(commandObject.ToString());
+                procs = Process.GetProcessesByName(commandObject.ToString());
 
-                System.Diagnostics.Process close = procs[0];
+                Process close = procs[0];
 
                 if (!close.HasExited)
                 {
@@ -139,7 +139,7 @@ namespace JarvisEmulator
             {
                 if (procs != null)
                 {
-                    foreach (System.Diagnostics.Process p in procs)
+                    foreach (Process p in procs)
                     {
                         p.Dispose();
                     }
