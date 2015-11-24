@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -80,19 +81,32 @@ namespace JarvisEmulator
 
         public void CommandOpenApplication( string app )
         {
-            System.Diagnostics.Process[] procs = System.Diagnostics.Process.GetProcessesByName(app);
+            Process proc = new Process();
+            string appName = commandObject.ToString(); ;
 
+            if (appName.Contains(".exe"))
+            {
+                appName = appName.Remove(appName.Length - 4);
+            }
+
+            Process[] procname = Process.GetProcessesByName(appName);
             try
             {
-            System.Diagnostics.Process proc = new System.Diagnostics.Process();
-            proc.EnableRaisingEvents = false;
-            proc.StartInfo.FileName = commandObject.ToString();
-            proc.Start();
+                if (procname.Length == 0)//it's not yet open
+                {
+                    proc.EnableRaisingEvents = false;
+                    proc.StartInfo.FileName = commandObject.ToString();
+                    proc.Start();
+                    // Notify the user of the action
+                    SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.OPENING_APPLICATION, username, app));
+                }
+                else//it is open
+                {
+                    SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.ALREADY_OPENED, username, app));
+                }
 
-                // Notify the user of the action
-                SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.OPENING_APPLICATION, username, app));
-        }
-            catch( Exception e )
+            }
+            catch ( Exception e )
             {
                 // Notify the user that no action was taken
                 SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.ALREADY_OPENED, username, app));
