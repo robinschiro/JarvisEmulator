@@ -148,7 +148,18 @@ namespace JarvisEmulator
 
         public void CommandRSSUpdate( string URL )
         {
+            // Wait for the RSS processing thread to stop if it is active.
+            if (rssManagerThread.IsAlive)
+            {
+                rssManagerThread.Join();
+            }
+
+            // Create new thread.
+            rssManagerThread = new Thread(rssManager.PublishRSSString);
+
+            // Provide the URL and start the thread.
             rssManager.provideURL(URL);
+            rssManagerThread.Start();
         }
 
         public void CommandQuestionAsked()

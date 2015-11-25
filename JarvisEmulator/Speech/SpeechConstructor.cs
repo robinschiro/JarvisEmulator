@@ -25,23 +25,23 @@ namespace JarvisEmulator
         Random randomizer;
 
         // A list of different ways of greeting the user.
-        string[] greetingVariants = { "High,", "Hello,", "Good to see you,", "Nice to see you,", "It's always a plasure to see you," };
+        string[] greetingVariants = { "High, ", "Hello, ", "Good to see you, ", "Nice to see you, ", "It's always a pleasure to see you, " };
         // A list of different ways of notifying a log out.
-        string[] logoutVariants = { "Good bye,", "See you next time,", "Have a nice day,", "Until next time," };
+        string[] logoutVariants = { "Good bye, ", "See you next time, ", "Have a nice day, ", "Until next time, " };
         // A list of different ways of notifying a warning.
-        string[] notificationIntroductionWarning = {"It's not a big deal, but", "Don't worry to much, but", "So you know,", "For your information,", "We have a small problem,", "There's something that need your attention." };
+        string[] notificationIntroductionWarning = {"It's not a big deal, but ", "Don't worry to much, but ", "So you know, ", "For your information, ", "We have a small problem, ", "There's something that need your attention." };
         // A list of different ways of notifying an error.
-        string[] notificationIntroductionError = { "An error has happened", "Something terrible has happened. ", "This is not a drill. ", "We have a big problem," };
+        string[] notificationIntroductionError = { "An error has happened ", "Something terrible has happened. ", "This is not a drill. ", "We have a big problem," };
         // A list of different ways of outputing the data.
         string[] notificationIntroductionDataOutput = { "About the information you requested, ", "Here's what I found about what you asked, sir. ", "Here's what I found. ", "This should be it. " };
         // A list of different ways of notifying when opening an application.
-        string[] openingAppVariants = { "opening", "I will open", "Here it is for you," };
+        string[] openingAppVariants = { "Opening ", "I will open", "Here it is for you," };
         // A list of different ways of notifying when opening an application.
-        string[] openedAlreadyAppVariants = { "already opened", "the application you requested is already opened", "I think I already did that" };
+        string[] openedAlreadyAppVariants = { "Already opened.", "The application you requested is already opened.", "I think I already did that." };
         // A list of different ways of notifying when closing an application.
-        string[] closingAppVariants = { "closing", "I will close", "No more of", "babye, " };
+        string[] closingAppVariants = { "Closing ", "I will close ", "No more of ", "Bye bye, " };
         // A list of different ways of notifying when closing an application.
-        string[] noAppToCloseVariants = { "i can't find that application anywherem", "no application with that name opened", "Can't do the impossible, That application is not opened." };
+        string[] noAppToCloseVariants = { "I can't find that application anywhere.", "No application with that name opened.", "Can't do the impossible, that application is not opened." };
 
         // So it doesn't repeat twice the same random introduction
         public int lastIndex = 0;

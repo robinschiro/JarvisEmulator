@@ -81,15 +81,14 @@ namespace JarvisEmulator
 
         private string parseRss( string url )
         {
-
             XmlDocument rssXmlDoc = new XmlDocument();
             rssXmlDoc.Load(url);
-            XmlNodeList rssNodes = rssXmlDoc.SelectNodes("rss/channel/item");
             StringBuilder rssContent = new StringBuilder();
 
-
-            if ( url.Contains("news") || url.Contains("reddit") )
+            if ( !url.ToLower().Contains("weather") )
             {
+                XmlNodeList rssNodes = rssXmlDoc.SelectNodes("rss/channel/item");
+
                 int count = 0;
                 int x = 1;
                 foreach ( XmlNode rssNode in rssNodes )
@@ -113,28 +112,20 @@ namespace JarvisEmulator
             }
             else
             {
-                foreach ( XmlNode rssNode in rssNodes )
-                {
-                    XmlNode rssSubNode = rssNode.SelectSingleNode("title");
-                    string title = rssSubNode != null ? rssSubNode.InnerText : "";
+                // Using the Yahoo API.
+                //http://weather.yahooapis.com/forecastrss?p=84092
 
-                    //http://weather.yahooapis.com/forecastrss?p=32816
-
-                    XmlDocument xdoc = new XmlDocument();
-                    xdoc.Load(url);
-                    XmlNamespaceManager nsmgr = new XmlNamespaceManager(xdoc.NameTable);
-                    nsmgr.AddNamespace("yweather", "http://xml.weather.yahoo.com/ns/rss/1.0");
-                    XmlNode xNode = xdoc.DocumentElement.SelectSingleNode("/rss/channel/item/yweather:condition", nsmgr);
-                    XmlAttributeCollection attrColl = xdoc.SelectSingleNode("/rss/channel/item/yweather:condition", nsmgr).Attributes;
-
-
-                    XmlAttribute attr1 = attrColl["text"];
-                    string conditions = attr1.InnerXml;
-                    XmlAttribute attr2 = attrColl["temp"];
-                    string temperature = attr2.InnerXml;
-                    rssContent.Append(title + " Today is " + conditions + " with a temperature of " + temperature + " degrees Fahrenheit ");
-
-                }
+                XmlNamespaceManager nsmgr = new XmlNamespaceManager(rssXmlDoc.NameTable);
+                nsmgr.AddNamespace("yweather", "http://xml.weather.yahoo.com/ns/rss/1.0");
+                XmlNode xNode = rssXmlDoc.DocumentElement.SelectSingleNode("/rss/channel/item/yweather:condition", nsmgr);
+                XmlAttributeCollection attrColl = rssXmlDoc.SelectSingleNode("/rss/channel/item/yweather:condition", nsmgr).Attributes;
+                
+                // Retrieve the conditions and temperature.
+                XmlAttribute attr1 = attrColl["text"];
+                string conditions = attr1.InnerXml;
+                XmlAttribute attr2 = attrColl["temp"];
+                string temperature = attr2.InnerXml;
+                rssContent.Append("Today is " + conditions + " with a temperature of " + temperature + " degrees Fahrenheit ");
             }
 
             return rssContent.ToString();
