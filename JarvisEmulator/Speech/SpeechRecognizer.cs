@@ -21,6 +21,10 @@ namespace JarvisEmulator
 
     public class SpeechRecognizer : IObservable<SpeechData>, IObserver<FrameData>, IObserver<UIData>
     {
+        // Constants.
+        private const double MINIMUM_CONFIDENCE = 0.90;
+
+
         private SpeechRecognitionEngine speechRecognizer = new SpeechRecognitionEngine();
         private List<Word> words = new List<Word>();
         private User activeUser;
@@ -180,7 +184,7 @@ namespace JarvisEmulator
         {
             string voiceInput = e.Result.Text;
 
-            if (e.Result.Confidence > 0.95)
+            if (e.Result.Confidence > MINIMUM_CONFIDENCE)
             {
                 if (voiceInput.StartsWith("OK Jarvis"))
                 {
