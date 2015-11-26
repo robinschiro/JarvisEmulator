@@ -16,10 +16,11 @@ namespace JarvisEmulator
         CLOSE,
         LOGOUT,
         TAKEPICTURE,
-        GREET_USER
+        GREET_USER,
+        GET_WEATHER
     }
 
-    public class ActionManager : IObservable<UserNotification>, IObserver<SpeechData>, IObserver<FrameData>
+    public class ActionManager : IObservable<UserNotification>, IObserver<SpeechData>, IObserver<FrameData>, IObserver<ConfigData>
     {
         #region Private Members
 
@@ -27,7 +28,8 @@ namespace JarvisEmulator
 
         private RSSManager rssManager;
         private Thread rssManagerThread;
-
+        private const string WEATHER_URL = "http://weather.yahooapis.com/forecastrss?p=";
+        private int zipCode = 32826;
         #endregion
 
         #region Observer lists
@@ -190,28 +192,24 @@ namespace JarvisEmulator
                 case Command.LOGOUT:
                 {
                     CommandLogout();
-
                     break;
                 }
 
                 case Command.UPDATE:
                 {
                     CommandRSSUpdate(commandValue);
-
                     break;
                 }
 
                 case Command.OPEN:
                 {
                     CommandOpenApplication(commandValue);
-
                     break;
                 }
 
                 case Command.CLOSE:
                 {
                     CommandCloseApplication(commandValue);
-
                     break;
                 }
 
@@ -219,7 +217,12 @@ namespace JarvisEmulator
                 {
                     // Notify the user of the action
                     SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.USER_ENTERED, username, ""));
+                    break;
+                }
 
+                case Command.GET_WEATHER:
+                {
+                    CommandRSSUpdate(WEATHER_URL + zipCode);
                     break;
                 }
 
@@ -251,6 +254,11 @@ namespace JarvisEmulator
             }
         }
 
+        public void OnNext( ConfigData value )
+        {
+            zipCode = value.ZipCode;
+        }
+
         public void OnError( Exception error )
         {
             return;
@@ -260,6 +268,7 @@ namespace JarvisEmulator
         {
             throw new NotImplementedException();
         }
+
 
         #endregion
     }

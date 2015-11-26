@@ -16,17 +16,21 @@ namespace JarvisEmulator
         public bool HaveJarvisGreetUser;
         public List<User> Users;
         public string PathToTrainingImages;
+        public int ZipCode;
 
-        public bool IsInit;
+        public bool SaveToProfile;
+        public bool RefreshTrainingImages;
+        public bool PerformCleanup;
     }
 
-    public class ConfigurationManager : IObservable<ConfigData>, IObserver<UIData>
+    public class ConfigurationManager : IObservable<ConfigData>, IObserver<ConfigData>
     {
         #region Configuration Members
 
         private tvProfile profile;
         private List<User> users = new List<User>();
         private string pathToTrainingImages;
+        private int zipCode;
         private bool haveJarvisGreetUsers;
         private bool drawDetectionRectangles;
 
@@ -43,7 +47,7 @@ namespace JarvisEmulator
 
         }
 
-        private void SaveToProfile( UIData data )
+        private void SaveToProfile( ConfigData data )
         {
             try
             {
@@ -51,6 +55,7 @@ namespace JarvisEmulator
 
                 // Update the profile file with data from the UIData packet.
                 profile.Add("-TrainingImagesFolder", data.PathToTrainingImages);
+                profile.Add("-ZipCode", data.ZipCode);
                 profile.Add("-HaveJarvisGreetUsers", data.HaveJarvisGreetUser);
                 profile.Add("-DrawDetectionRectangles", data.DrawDetectionRectangles);
 
@@ -99,6 +104,9 @@ namespace JarvisEmulator
             // Retrieve the path to the training images folder.
             pathToTrainingImages = profile.sValue("-TrainingImagesFolder", Path.Combine(Directory.GetCurrentDirectory(), "TrainingImages"));
 
+            // Retrieve the zip code.
+            zipCode = profile.iValue("-ZipCode", 32826);
+
             // Determine if the application should greet users upon entrance.
             haveJarvisGreetUsers = profile.bValue("-HaveJarvisGreetUsers", false);
 
@@ -137,12 +145,26 @@ namespace JarvisEmulator
             data.DrawDetectionRectangles = drawDetectionRectangles;
             data.HaveJarvisGreetUser = haveJarvisGreetUsers;
             data.PathToTrainingImages = pathToTrainingImages;
+            data.ZipCode = zipCode;
             data.Users = users;
-            data.IsInit = true;
-            
+            data.RefreshTrainingImages = true;
+            data.SaveToProfile = true;            
 
             // Send configuration information to the observers.
             SubscriptionManager.Publish(configObservers, data);
+        }
+
+        public void OnNext( ConfigData value )
+        {
+            if ( value.SaveToProfile )
+            {
+                SaveToProfile(value);
+            }
+        }
+
+        public IDisposable Subscribe( IObserver<ConfigData> observer )
+        {
+            return SubscriptionManager.Subscribe(configObservers, observer);
         }
 
         public void OnCompleted()
@@ -155,17 +177,5 @@ namespace JarvisEmulator
             throw new NotImplementedException();
         }
 
-        public void OnNext( UIData value )
-        {
-            if ( value.SaveToProfile )
-            {
-                SaveToProfile(value);
-            }
-        }
-
-        public IDisposable Subscribe( IObserver<ConfigData> observer )
-        {
-            return SubscriptionManager.Subscribe(configObservers, observer);
-        }
     }
 }

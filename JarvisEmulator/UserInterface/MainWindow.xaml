@@ -149,12 +149,22 @@
                                     Style="{StaticResource BrowseButtonStyle}"
                                     Click="btnBrowse_Click"/>
 
+                            <Label Content="Zip Code: "
+                                   Grid.Column="0"
+                                   Grid.Row="2" />
+
+                            <TextBox Name="tboxZipCode"
+                                         Width="75"
+                                         HorizontalAlignment="Left"
+                                         Grid.Column="1"
+                                         Grid.Row="2" />
+
                             <CheckBox Name="chkGreetUsers"
                                       Content="Have Jarvis Greet Users"
                                       Margin="10" 
                                       Grid.Column="0"
                                       Grid.ColumnSpan="2"
-                                      Grid.Row="2" />
+                                      Grid.Row="3" />
                         </Grid>
                     </GroupBox>
                     
@@ -201,27 +211,35 @@
                                             ToolTip="Modify the name of the selected user"
                                             Click="btnModifyUser_Click">
                                     </Button>
-
-
                                 </Grid>
-
                             </Grid>
                             
                             <ComboBox Name="cboxUserSelection"
                                       ItemsSource="{Binding Users}"
                                       SelectionChanged="cboxUserSelection_SelectionChanged"/>
 
-                            <Grid Height="40"
+                            <Grid Margin="0, 10, 0, 0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+
+
+                            </Grid>
+                            
+
+
+                            <Grid 
                                   Margin="0,10,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition />
                                     <ColumnDefinition />
                                 </Grid.ColumnDefinitions>
-
+                                
                                 <Label Content="Command Dictionary:"
                                        Margin="0, 10, 0, 0"
                                        VerticalAlignment="Bottom"
-                                       Grid.Column="0" />
+                                       Grid.Column="0"/>
 
                                 <Grid Grid.Column="1"
                                       Width="100"
@@ -250,10 +268,7 @@
                                             ToolTip="Modify selected command entry"
                                             Click="btnModifyEntry_Click">
                                     </Button>
-
-
-                                </Grid>
-                                
+                                </Grid>                                
                             </Grid>
 
                             <ListView Name="lvCommandDictionary"

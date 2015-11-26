@@ -28,7 +28,7 @@ namespace JarvisEmulator
         public User ActiveUser;
     }
 
-    public class FaceDetector : IObservable<FrameData>, IObserver<UIData>, IObserver<ConfigData>
+    public class FaceDetector : IObservable<FrameData>, IObserver<ConfigData>
     {
         #region Private Variables
 
@@ -46,7 +46,7 @@ namespace JarvisEmulator
         private MCvAvgComp[][] facesDetected;
         private ConcurrentBag<Rectangle> faceRectangleBag = new ConcurrentBag<Rectangle>();
         private bool drawDetectionRectangles = false;
-        private List<User> users;
+        private List<User> users = new List<User>();
         private User activeUser;
 
         private volatile bool stopFrameProcessing;
@@ -277,7 +277,7 @@ namespace JarvisEmulator
             return SubscriptionManager.Subscribe(frameObservers, observer);
         }
 
-        public void OnNext( UIData value )
+        public void OnNext( ConfigData value )
         {
             drawDetectionRectangles = value.DrawDetectionRectangles;
 
@@ -303,15 +303,6 @@ namespace JarvisEmulator
                     grabber.Dispose();
                 }
             }
-        }
-
-        public void OnNext( ConfigData value )
-        {
-            drawDetectionRectangles = value.DrawDetectionRectangles;
-            users = value.Users;
-            pathToTrainingImagesFolder = value.PathToTrainingImages;
-
-            RetrieveTrainingImages();
         }
 
         public void OnError( Exception error )

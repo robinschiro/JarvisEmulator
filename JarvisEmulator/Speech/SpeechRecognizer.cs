@@ -19,11 +19,10 @@ namespace JarvisEmulator
         public string CommandValue;
     }
 
-    public class SpeechRecognizer : IObservable<SpeechData>, IObserver<FrameData>, IObserver<UIData>
+    public class SpeechRecognizer : IObservable<SpeechData>, IObserver<FrameData>, IObserver<ConfigData>
     {
         // Constants.
         private const double MINIMUM_CONFIDENCE = 0.90;
-
 
         private SpeechRecognitionEngine speechRecognizer = new SpeechRecognitionEngine();
         private List<Word> words = new List<Word>();
@@ -33,7 +32,7 @@ namespace JarvisEmulator
         private string[] similar = new string[] { "ride Jarvis", "fly Jarvis", "hide Jarvis", "try Jarvis", "my harvest" };
 
         // Default phrases recognized by Jarvis
-        private string[] mainCommands = new string[] { "hello Jarvis", "hi Jarvis","howdy Jarvis",
+        private string[] mainCommands = new string[] { "hello Jarvis", "hi Jarvis","howdy Jarvis", "OK Jarvis, how is the weather",
                                                "OK Jarvis goodbye","OK Jarvis bye","OK Jarvis exit", "OK Jarvis see you later",
                                                "OK Jarvis log out", "OK Jarvis take my picture", "OK Jarvis snap", "OK Jarvis cheese", "OK Jarvis selfie"};
 
@@ -67,7 +66,17 @@ namespace JarvisEmulator
             speechRecognizer.LoadGrammar(defaultGrammar);
 
             speechRecognizer.SpeechRecognized += SpeechRecognized;
-            speechRecognizer.SetInputToDefaultAudioDevice();
+
+            // Attempt to hook onto an audio input device.
+            try
+            {
+                speechRecognizer.SetInputToDefaultAudioDevice();
+            }
+            catch ( Exception ex )
+            {
+                // No audio input device was found.
+                return;
+            }
             speechRecognizer.RecognizeAsync(RecognizeMode.Multiple);
         }
 
@@ -146,6 +155,10 @@ namespace JarvisEmulator
                     voiceInput.Contains("cheese") || voiceInput.Contains("selfie"))
                 {
                     commandEnum = Command.TAKEPICTURE;
+                }
+                else if ( voiceInput.Contains("weather") )
+                {
+                    commandEnum = Command.GET_WEATHER;
                 }
             }
 
@@ -240,7 +253,7 @@ namespace JarvisEmulator
 
         // When a user has updated the UI, refresh the recognizer with the commands
         // associated with the active user.
-        public void OnNext( UIData value )
+        public void OnNext( ConfigData value )
         {
             if ( value.SaveToProfile )
             {

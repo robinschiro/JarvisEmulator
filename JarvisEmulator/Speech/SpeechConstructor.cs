@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace JarvisEmulator
 {
     // TODO: Put some strings for the opening and closing app variants
-    public class SpeechConstructor : IObserver<UserNotification>, IObserver<UIData>
+    public class SpeechConstructor : IObserver<UserNotification>, IObserver<ConfigData>
     {
         // Speech synthesizer
         SpVoice verbalizer;
@@ -199,7 +199,7 @@ namespace JarvisEmulator
             throw new NotImplementedException();
         }
 
-        public void OnNext(UIData value)
+        public void OnNext(ConfigData value)
         {
             if( value.PerformCleanup )
             {
