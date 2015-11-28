@@ -27,6 +27,8 @@ namespace JarvisEmulator
     {
         #region Private Members
 
+        private Image<Gray, byte> facePicture;
+
         #region RSS Management
 
         private RSSManager rssManager;
@@ -34,12 +36,12 @@ namespace JarvisEmulator
         private const string WEATHER_URL = "http://weather.yahooapis.com/forecastrss?p=";
         private int zipCode = 32826;
         private bool greetUser = false;
+
         #endregion
 
         #region Observer lists
 
         private List<IObserver<UserNotification>> userNotificationObservers = new List<IObserver<UserNotification>>();
-        private Image<Gray, byte> facePicture;
         #endregion
 
         #endregion
@@ -152,13 +154,11 @@ namespace JarvisEmulator
 
         public void CommandTakePhoto(string loc)
         {
-            int maxFileNum = 0;
-
             // Store a picture of the face provided by the latest frame data packet.
             if (null != facePicture)
             {
-                facePicture.Save(Path.Combine(loc, (maxFileNum + 1) + ".jpg"));
-            }
+                facePicture.Save(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), username + "_Selfie.bmp"));
+            }  
         }
 
         public void CommandRSSUpdate( string nickname, string URL )
@@ -271,6 +271,9 @@ namespace JarvisEmulator
 
         public void OnNext( FrameData value )
         {
+            // Maintain reference to face picture.
+            facePicture = value.Face;
+
             string original = username;
             if ( value.ActiveUser != null )
             {
