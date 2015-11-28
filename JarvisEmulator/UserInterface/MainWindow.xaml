@@ -317,7 +317,7 @@
                            Height="240"/>
                     
                     <CheckBox Name="chkEnableTracking"
-                              Content="Enable Tracking"
+                              Content="Show Detection Rectangles"
                               HorizontalAlignment="Center"
                               Margin="10"
                               Click="chkEnableTracking_Click"/>

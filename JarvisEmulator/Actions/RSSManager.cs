@@ -82,7 +82,17 @@ namespace JarvisEmulator
         private string parseRss( string url )
         {
             XmlDocument rssXmlDoc = new XmlDocument();
-            rssXmlDoc.Load(url);
+
+            // Attempt to load the URL.
+            // If this fails, return an error message.
+            try
+            {
+                rssXmlDoc.Load(url);
+            }
+            catch ( Exception ex )
+            {
+                return "Failed to retrieve data from the website " + url;
+            }
             StringBuilder rssContent = new StringBuilder();
 
             if ( !url.ToLower().Contains("weather") )
@@ -104,7 +114,7 @@ namespace JarvisEmulator
 
                     count++;
 
-                    rssContent.Append(x + "." + title + "   ");
+                    rssContent.Append(x + " " + title + "   ");
                     x++;
                     if ( count > 5 )
                         break;

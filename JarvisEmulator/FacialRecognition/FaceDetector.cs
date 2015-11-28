@@ -1,4 +1,4 @@
-﻿//#define USE_MULTITHREADING
+﻿#define USE_MULTITHREADING
 
 using System;
 using System.Collections.Generic;
@@ -32,6 +32,13 @@ namespace JarvisEmulator
     {
         #region Private Variables
 
+        #region Constants
+
+        private const int MAX_CACHE_SIZE = 20;
+        private const int EIGEN_THRESHOLD = 3000;
+
+        #endregion
+
         private Image<Bgr, Byte> currentFrame;
         private Capture grabber;
         private HaarCascade face;
@@ -41,19 +48,19 @@ namespace JarvisEmulator
         private string pathToTrainingImagesFolder;
         private List<Image<Gray, byte>> trainingImages = new List<Image<Gray, byte>>();
         private List<Guid> trainingImageGuids = new List<Guid>();
-        private const int MAX_CACHE_SIZE = 20;
 
         private MCvAvgComp[][] facesDetected;
         private ConcurrentBag<Rectangle> faceRectangleBag = new ConcurrentBag<Rectangle>();
         private bool drawDetectionRectangles = false;
         private List<User> users = new List<User>();
         private User activeUser;
+        Image<Gray, byte> facePic = null;
 
+        // Thread Management
+        private Thread frameProcessor;
+        private Thread frameCapturing;
         private volatile bool stopFrameProcessing;
-
-
-        private System.Threading.Timer frameTimer;
-        private System.Threading.Timer detectionTimer;
+        private object lockBagObject = new object();
 
         #region Observer Lists
 
@@ -61,7 +68,6 @@ namespace JarvisEmulator
         private List<IObserver<FrameData>> frameObservers = new List<IObserver<FrameData>>();
 
         #endregion
-
 
         #endregion
 
@@ -76,19 +82,44 @@ namespace JarvisEmulator
 
         public void EnableFrameCapturing()
         {
-            // Spawn the timer that populates the video feed with frames.
-            Thread frameProcessor = new Thread(PerformFrameProcessing);
-            frameProcessor.Start();
-
 #if USE_MULTITHREADING
-            // Spawn the timer that performs the detection.
-            detectionTimer = new System.Threading.Timer(DetectFaces, null, 0, 100);
+            // Spawn the thread that performs the capturing.
+            frameCapturing = new Thread(PerformFrameCapturing);
+            frameCapturing.Start();
 #endif
+
+            // Spawn the thread that performs the processing.
+            frameProcessor = new Thread(PerformFrameProcessing);
+            frameProcessor.Start();
         }
+
+        #region Threaded Functions
+
+        private void PerformFrameCapturing()
+        {
+            while ( !stopFrameProcessing )
+            {
+                CaptureFrame();
+                Thread.Sleep(10);
+            }
+        }
+
+        // Process frames from the capture device.
+        // This function should be called on a thread separate from the main thread.
+        private void PerformFrameProcessing()
+        {
+            while ( !stopFrameProcessing )
+            {
+                ProcessCurrentFrame();
+                Thread.Sleep(10);
+            }
+        }
+
+        #endregion
 
         #region Frame Processing
 
-        // Initialize face detection.
+        // Get access to the user's webcam.
         public void InitializeCaptureDevice()
         {
             try
@@ -97,7 +128,7 @@ namespace JarvisEmulator
                 grabber = new Capture();
 
                 // Dump the first frame.
-                grabber.QueryFrame();
+                currentFrame = grabber.QueryFrame();
             }
             catch ( Exception ex ) { }
         }
@@ -118,28 +149,93 @@ namespace JarvisEmulator
                 catch (Exception ex) { }
 
                 // Update the list storing the current face rectangles.
-                faceRectangleBag = new ConcurrentBag<Rectangle>();
-                foreach ( MCvAvgComp f in facesDetected[0] )
+                lock ( lockBagObject )
                 {
-                    faceRectangleBag.Add(f.rect);
+                    faceRectangleBag = new ConcurrentBag<Rectangle>();
+                    foreach ( MCvAvgComp f in facesDetected[0] )
+                    {
+                        faceRectangleBag.Add(f.rect);
+                    }
                 }
             }
         }
 
-        // Process frames from the capture device.
-        // This function should be called on a thread separate from the main thread.
-        private void PerformFrameProcessing()
+        // Retrieve frames from the capture device.
+        private void CaptureFrame()
         {
-            while ( !stopFrameProcessing )
+            if ( stopFrameProcessing )
             {
-                ProcessCurrentFrame();
-                Thread.Sleep(10);
+                return;
             }
+
+            Image<Bgr, byte> modifiedFrame;
+
+            // Verify that the frame grabber exists.
+            if ( null == grabber )
+            {
+                // Notify user that the capture device has not been initialized.
+                return;
+            }
+
+            // Retrieve the current frame.
+            lock ( currentFrame )
+            {
+                currentFrame = grabber.QueryFrame().Resize(320, 240, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
+                modifiedFrame = currentFrame.Copy();
+            }
+
+            lock ( lockBagObject )
+            {
+                foreach ( Rectangle rect in faceRectangleBag )
+                {
+                    // This action causes problems for an unknown reason sometimes.
+                    Image<Gray, byte> tempFacePic = null;
+                    try
+                    {
+                        tempFacePic = modifiedFrame.Copy(rect).Convert<Gray, byte>().Resize(100, 100, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
+                    }
+                    catch ( Exception ex ) { }
+                    finally
+                    {
+                        if ( null != tempFacePic )
+                        {
+                            facePic = tempFacePic;
+                        }
+                    }
+
+                    // Draw a rectangle around each detected face.
+                    if ( drawDetectionRectangles )
+                    {
+                        modifiedFrame.Draw(rect, new Bgr(System.Drawing.Color.Red), 2);
+                    }
+                }
+            }
+
+            // Convert the frame to something viewable within WPF and freeze it so that it can be displayed.
+            BitmapSource frameBitmap = ToBitmapSource(modifiedFrame);
+            frameBitmap.Freeze();
+
+            // Create a frame data packet.
+            FrameData packet = new FrameData();
+            packet.Frame = frameBitmap;
+            packet.Face = facePic;
+            packet.ActiveUser = activeUser;
+
+            // Send the frame to all frame observers.
+            SubscriptionManager.Publish(frameObservers, packet);
+
+
         }
 
         // Process the current frame from the capture device to determine the active user.
         public void ProcessCurrentFrame( object state = null )
         {
+            if ( stopFrameProcessing )
+            {
+                return;
+            }
+
+#if !USE_MULTITHREADING
             // Verify that the frame grabber exists.
             if ( null == grabber )
             {
@@ -149,55 +245,78 @@ namespace JarvisEmulator
 
             // Retrieve the current frame.
             currentFrame = grabber.QueryFrame().Resize(320, 240, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
+
+#endif
+            // Detect all faces in the current frame.
+            DetectFaces();
+
+            // Local objects used for recognition.
             Image<Gray, byte> result = null;
             BitmapSource frameBitmap = null;
 
-#if !USE_MULTITHREADING
-            DetectFaces();
-#endif
+            // Recognize the active user in the frame.
             try
             {
+                Rectangle largestRect = new Rectangle(0,0,1,1);
+                bool faceDetected = false;
+
                 // Process the frame in order to detect faces.
-                // TODO: Collection is modifed mid-enumeration. Need to fix.
-                foreach ( Rectangle rect in faceRectangleBag )
+                lock ( lockBagObject )
                 {
-                    // Retrieve just the user's face from the frame.
-                    result = currentFrame.Copy(rect).Convert<Gray, byte>().Resize(100, 100, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
-
-                    lock ( trainingImages )
+                    // Choose the largest rectangle in the bag.
+                    foreach ( Rectangle rect in faceRectangleBag )
                     {
-                        // Perform recognition on the result.
-                        if ( 0 != trainingImages.Count )
+                        if ( (rect.Width * rect.Height) > (largestRect.Width * largestRect.Height) )
                         {
-                            // Create a set of criteria for the recognizer.
-                            MCvTermCriteria termCrit = new MCvTermCriteria(trainingImages.Count, 0.001);
-
-                            // Create a recognizer based on the training images and term criteria.
-                            EigenObjectRecognizer recognizer = new EigenObjectRecognizer(trainingImages.ToArray(), trainingImageGuids.ToArray(), MAX_CACHE_SIZE, 5000, ref termCrit);
-
-                            // Determine the active user.
-                            Guid userGuid = recognizer.Recognize(result);
-                            
-                            lock (users)
-                            {
-                                activeUser = users.Find(user => user.Guid == userGuid);
-                            }
-                        }
-                        else
-                        {
-                            activeUser = null;
+                            largestRect = rect;
+                            faceDetected = true;
                         }
                     }
-
-                    // Draw a rectangle around each detected face.
-                    if ( drawDetectionRectangles )
-                    {
-                        currentFrame.Draw(rect, new Bgr(System.Drawing.Color.Red), 2);
-                    }
-                    
                 }
+
+                // Retrieve just the user's face from the frame.
+                lock ( currentFrame )
+                {
+                    result = currentFrame.Copy(largestRect).Convert<Gray, byte>().Resize(100, 100, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
+                }
+
+                lock ( trainingImages )
+                {
+                    // Perform recognition on the result.
+                    if ( 0 != trainingImages.Count )
+                    {
+                        // Create a set of criteria for the recognizer.
+                        MCvTermCriteria termCrit = new MCvTermCriteria(trainingImages.Count, 0.001);
+
+                        // Create a recognizer based on the training images and term criteria.
+                        EigenObjectRecognizer recognizer = new EigenObjectRecognizer(trainingImages.ToArray(), trainingImageGuids.ToArray(), MAX_CACHE_SIZE, EIGEN_THRESHOLD, ref termCrit);
+
+                        // Determine the active user.
+                        Guid userGuid = recognizer.Recognize(faceDetected, result);
+
+                        lock ( users )
+                        {
+                            activeUser = users.Find(user => user.Guid == userGuid);
+                        }
+                    }
+                    else
+                    {
+                        activeUser = null;
+                    }
+                }
+
+#if !USE_MULTITHREADING
+                // Draw a rectangle around each detected face.
+                if ( drawDetectionRectangles )
+                {
+                    currentFrame.Draw(largestRect, new Bgr(System.Drawing.Color.Red), 2);
+                }
+#endif
+
             }
             catch (Exception ex) { }
+
+#if !USE_MULTITHREADING
             finally
             {
                 if ( null != currentFrame )
@@ -216,6 +335,7 @@ namespace JarvisEmulator
 
             // Send the frame to all frame observers.
             SubscriptionManager.Publish(frameObservers, packet);
+#endif
         }
 
 
@@ -239,7 +359,7 @@ namespace JarvisEmulator
             }
         }
 
-        #endregion
+#endregion
 
         // Retrieve the training images of all users from the training images folder.
         private void RetrieveTrainingImages()
@@ -270,7 +390,7 @@ namespace JarvisEmulator
             }
         }
 
-        #region Observer Pattern Required Methods
+#region Observer Pattern Required Methods
 
         public IDisposable Subscribe( IObserver<FrameData> observer )
         {
@@ -298,6 +418,11 @@ namespace JarvisEmulator
             if ( value.PerformCleanup )
             {
                 stopFrameProcessing = true;
+
+                // Wait for threads to terminate.
+                frameCapturing.Join();
+                frameProcessor.Join();
+
                 if ( null != grabber )
                 {
                     grabber.Dispose();
@@ -315,6 +440,6 @@ namespace JarvisEmulator
             throw new NotImplementedException();
         }
 
-        #endregion
+#endregion
     }
 }

@@ -82,20 +82,20 @@ namespace JarvisEmulator
 
         // Update Jarvis's grammar by adding commands from the command dictionary of the active user.
         // This should only be called when the active user changes.
-        public void UpdateGrammar()
+        public void UpdateGrammar( bool unloadGrammar )
         {
-            // Do not do anything is there is no active user.
-            if ( null == activeUser )
-            {
-                return;
-            }
-
-            if (userGrammar != null)
+            if ( unloadGrammar && (null != userGrammar) && speechRecognizer.Grammars.Contains(userGrammar) )
             {
                 speechRecognizer.UnloadGrammar(userGrammar);
             }
 
             Choices userChoices = new Choices();
+
+            // Do not continue if is no active user.
+            if ( null == activeUser )
+            {
+                return;
+            }
 
             //Adds commands to the recognizer's dictionary.
             List<String> commandKeys = activeUser.CommandDictionary.Keys.ToList();
@@ -225,7 +225,7 @@ namespace JarvisEmulator
         }
 
         // UpdateGrammar takes too long to run synchronously.
-        private void RunUpdateGrammarThread()
+        private void RunUpdateGrammarThread( bool unloadGrammar )
         {
             // Wait for the previous thread to stop if it is active.
             if ( null != grammarUpdateThread && grammarUpdateThread.IsAlive )
@@ -234,7 +234,8 @@ namespace JarvisEmulator
             }
 
             // Create new thread.
-            grammarUpdateThread = new Thread(UpdateGrammar);
+            ThreadStart threadInfo = delegate () { UpdateGrammar(unloadGrammar); };
+            grammarUpdateThread = new Thread(threadInfo);
 
             // Start the thread.
             grammarUpdateThread.Start();
@@ -247,7 +248,7 @@ namespace JarvisEmulator
             if ( activeUser != value.ActiveUser )
             {
                 activeUser = value.ActiveUser;
-                RunUpdateGrammarThread();
+                RunUpdateGrammarThread( null != activeUser );
             }
         }
 
@@ -257,7 +258,7 @@ namespace JarvisEmulator
         {
             if ( value.SaveToProfile )
             {
-                RunUpdateGrammarThread();
+                RunUpdateGrammarThread((null != activeUser) && !value.PerformCleanup);
             }
         }
 

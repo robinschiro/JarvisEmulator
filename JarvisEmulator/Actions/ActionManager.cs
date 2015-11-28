@@ -30,6 +30,7 @@ namespace JarvisEmulator
         private Thread rssManagerThread;
         private const string WEATHER_URL = "http://weather.yahooapis.com/forecastrss?p=";
         private int zipCode = 32826;
+        private bool greetUser = false;
         #endregion
 
         #region Observer lists
@@ -247,16 +248,32 @@ namespace JarvisEmulator
 
         public void OnNext( FrameData value )
         {
+            string original = username;
             if ( value.ActiveUser != null )
             {
                 // Save the username every time it receives configdata
                 username = value.ActiveUser.ToString();
+            }
+            else
+            {
+                username = "";
+            }
+
+            if ( !String.IsNullOrEmpty(username) && username != original )
+            {
+                // Greet the new active user if the application is configured that way
+                if ( greetUser )
+                {
+                    // Notify the user of the action
+                    SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.USER_ENTERED, username, ""));
+                }
             }
         }
 
         public void OnNext( ConfigData value )
         {
             zipCode = value.ZipCode;
+            greetUser = value.HaveJarvisGreetUser;
         }
 
         public void OnError( Exception error )

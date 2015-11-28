@@ -33,7 +33,7 @@ namespace JarvisEmulator
         // A list of different ways of notifying an error.
         string[] notificationIntroductionError = { "An error has happened ", "Something terrible has happened. ", "This is not a drill. ", "We have a big problem," };
         // A list of different ways of outputing the data.
-        string[] notificationIntroductionDataOutput = { "About the information you requested, ", "Here's what I found about what you asked, sir. ", "Here's what I found. ", "This should be it. " };
+        string[] notificationIntroductionDataOutput = { "About the information you requested, ", "Here's what I found about what you asked, sir. ", "Here's what I found. " };
         // A list of different ways of notifying when opening an application.
         string[] openingAppVariants = { "Opening ", "I will open", "Here it is for you," };
         // A list of different ways of notifying when opening an application.
