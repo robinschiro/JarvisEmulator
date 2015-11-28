@@ -41,7 +41,7 @@ namespace JarvisEmulator
         // A list of different ways of notifying when closing an application.
         string[] closingAppVariants = { "Closing ", "I will close ", "No more of ", "Bye bye, " };
         // A list of different ways of notifying when closing an application.
-        string[] noAppToCloseVariants = { "I can't find that application anywhere.", "No application with that name opened.", "Can't do the impossible, that application is not opened." };
+        string[] noAppToCloseVariants = { "I can't find anywhere the application ", "No application opened with the name ", "Can't do the impossible, you never opened " };
 
         // So it doesn't repeat twice the same random introduction
         public int lastIndex = 0;

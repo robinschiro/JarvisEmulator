@@ -22,7 +22,7 @@ namespace JarvisEmulator
     public class SpeechRecognizer : IObservable<SpeechData>, IObserver<FrameData>, IObserver<UIData>
     {
         // Constants.
-        private const double MINIMUM_CONFIDENCE = 0.90;
+        private const double MINIMUM_CONFIDENCE = 0.70;
 
 
         private SpeechRecognitionEngine speechRecognizer = new SpeechRecognitionEngine();
@@ -108,6 +108,9 @@ namespace JarvisEmulator
             userChoices.Add(update);
             userChoices.Add(close);
 
+            if (commandKeys.Count <= 0)
+                return;
+
             // Build and add the user grammar to the recognizer. 
             userGrammar = new Grammar(new GrammarBuilder(userChoices));
             speechRecognizer.LoadGrammar(userGrammar);
@@ -169,7 +172,9 @@ namespace JarvisEmulator
                 string commandValue = activeUser.CommandDictionary[commandKey];
                 if ( commandValue.Contains(".exe") )
                 {
-                    return commandValue.Remove(commandValue.Length - 4);
+                    int indexOfLastSlash = commandValue.LastIndexOf('\\') + 1;
+
+                    return commandValue.Substring(indexOfLastSlash, commandValue.Length - indexOfLastSlash - 4);
                 }
                 else
                 {

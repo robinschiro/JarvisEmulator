@@ -84,6 +84,8 @@ namespace JarvisEmulator
             }
 
             Process[] procname = Process.GetProcessesByName(app);
+
+            
             try
             {
                 if ( procname.Length == 0 )//it's not yet open
@@ -112,16 +114,23 @@ namespace JarvisEmulator
             Process[] procs = null;
             try
             {
-                procs = Process.GetProcessesByName(app);
+                procs = Process.GetProcesses();//GetProcessesByName(app);
 
-                Process close = procs[0];
-
-                if ( !close.HasExited )
+                for (int i = 0; i < procs.Length; i++)
                 {
-                    // Notify the user of the action
-                    SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.CLOSING_APPLICATION, username, app));
+                    if ( procs[i].ProcessName.Contains(app) )
+                    {
 
-                    close.Kill();
+                        Process close = procs[0];
+
+                        if (!close.HasExited)
+                        {
+                            // Notify the user of the action
+                            SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.CLOSING_APPLICATION, username, app));
+
+                            close.Kill();
+                        }
+                    }
                 }
             }
             catch ( Exception e )
