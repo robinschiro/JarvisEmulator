@@ -16,23 +16,10 @@ using Emgu.CV;
 
 namespace JarvisEmulator
 {
-    public struct UIData
-    {
-        public bool DrawDetectionRectangles;
-        public bool HaveJarvisGreetUser;
-        public List<User> Users;
-        public string PathToTrainingImages;
-
-        public bool SaveToProfile;
-        public bool RefreshTrainingImages;
-        public bool PerformCleanup;
-    }
-
-
     /// <summary>
     /// Interaction logic for MainWindow.xaml
     /// </summary>
-    public partial class MainWindow : Window, INotifyPropertyChanged, IObservable<UIData>, IObserver<FrameData>, IObserver<ConfigData>
+    public partial class MainWindow : Window, INotifyPropertyChanged, IObservable<ConfigData>, IObserver<FrameData>, IObserver<ConfigData>
     {
         private Timer frameTimer;
         private BitmapSource currentFrame;
@@ -70,7 +57,7 @@ namespace JarvisEmulator
 
         #region Observer Lists
 
-        private List<IObserver<UIData>> uiObservers = new List<IObserver<UIData>>();
+        private List<IObserver<ConfigData>> uiObservers = new List<IObserver<ConfigData>>();
 
         #endregion
 
@@ -430,16 +417,14 @@ namespace JarvisEmulator
         // This should only be called at application initialization.
         public void OnNext( ConfigData value )
         {
-            if ( value.IsInit )
-            {
-                // Populate the user collection.
-                users = new ObservableCollection<User>(value.Users);
+            // Populate the user collection.
+            users = new ObservableCollection<User>(value.Users);
 
-                // Update the user interface.
-                chkEnableTracking.IsChecked = value.DrawDetectionRectangles;
-                chkGreetUsers.IsChecked = value.HaveJarvisGreetUser;
-                tboxTrainingImagesPath.Text = value.PathToTrainingImages;
-            }       
+            // Update the user interface.
+            chkEnableTracking.IsChecked = value.DrawDetectionRectangles;
+            chkGreetUsers.IsChecked = value.HaveJarvisGreetUser;
+            tboxTrainingImagesPath.Text = value.PathToTrainingImages;
+            tboxZipCode.Text = value.ZipCode.ToString();
         }
 
         public void OnNext( FrameData value )
@@ -449,17 +434,18 @@ namespace JarvisEmulator
             this.ActiveUser = value.ActiveUser;
         }
 
-        public IDisposable Subscribe( IObserver<UIData> observer )
+        public IDisposable Subscribe( IObserver<ConfigData> observer )
         {
             return SubscriptionManager.Subscribe(uiObservers, observer);
         }
 
         private void PublishUIData( bool saveToProfile = false, bool refreshTrainingImages = false, bool performCleanup = false )
         {
-            UIData packet = new UIData();
+            ConfigData packet = new ConfigData();
             packet.DrawDetectionRectangles = chkEnableTracking.IsChecked ?? false;
             packet.HaveJarvisGreetUser = chkGreetUsers.IsChecked ?? false;
             packet.PathToTrainingImages = tboxTrainingImagesPath.Text;
+            packet.ZipCode = Convert.ToInt32(tboxZipCode.Text);
             packet.Users = users.ToList<User>();
             packet.SaveToProfile = saveToProfile;
             packet.RefreshTrainingImages = refreshTrainingImages;

@@ -16,14 +16,14 @@ namespace JarvisEmulator
     public struct SpeechData
     {
         public Command Command;
-        public string CommandValue;
+        public string CommandKey;
+        public User ActiveUser;
     }
 
-    public class SpeechRecognizer : IObservable<SpeechData>, IObserver<FrameData>, IObserver<UIData>
+    public class SpeechRecognizer : IObservable<SpeechData>, IObserver<FrameData>, IObserver<ConfigData>
     {
         // Constants.
-        private const double MINIMUM_CONFIDENCE = 0.70;
-
+        private const double MINIMUM_CONFIDENCE = 0.90;
 
         private SpeechRecognitionEngine speechRecognizer = new SpeechRecognitionEngine();
         private List<Word> words = new List<Word>();
@@ -33,7 +33,7 @@ namespace JarvisEmulator
         private string[] similar = new string[] { "ride Jarvis", "fly Jarvis", "hide Jarvis", "try Jarvis", "my harvest" };
 
         // Default phrases recognized by Jarvis
-        private string[] mainCommands = new string[] { "hello Jarvis", "hi Jarvis","howdy Jarvis",
+        private string[] mainCommands = new string[] { "hello Jarvis", "hi Jarvis","howdy Jarvis", "OK Jarvis, how is the weather",
                                                "OK Jarvis goodbye","OK Jarvis bye","OK Jarvis exit", "OK Jarvis see you later",
                                                "OK Jarvis log out", "OK Jarvis take my picture", "OK Jarvis snap", "OK Jarvis cheese", "OK Jarvis selfie"};
 
@@ -67,26 +67,36 @@ namespace JarvisEmulator
             speechRecognizer.LoadGrammar(defaultGrammar);
 
             speechRecognizer.SpeechRecognized += SpeechRecognized;
+
+            // Attempt to hook onto an audio input device.
+            try
+            {
             speechRecognizer.SetInputToDefaultAudioDevice();
+            }
+            catch ( Exception ex )
+            {
+                // No audio input device was found.
+                return;
+            }
             speechRecognizer.RecognizeAsync(RecognizeMode.Multiple);
         }
 
         // Update Jarvis's grammar by adding commands from the command dictionary of the active user.
         // This should only be called when the active user changes.
-        public void UpdateGrammar()
+        public void UpdateGrammar( bool unloadGrammar )
         {
-            // Do not do anything is there is no active user.
-            if ( null == activeUser )
-            {
-                return;
-            }
-
-            if (userGrammar != null)
+            if ( unloadGrammar && (null != userGrammar) && speechRecognizer.Grammars.Contains(userGrammar) )
             {
                 speechRecognizer.UnloadGrammar(userGrammar);
             }
 
             Choices userChoices = new Choices();
+
+            // Do not continue if is no active user.
+            if ( null == activeUser )
+            {
+                return;
+            }
 
             //Adds commands to the recognizer's dictionary.
             List<String> commandKeys = activeUser.CommandDictionary.Keys.ToList();
@@ -119,15 +129,14 @@ namespace JarvisEmulator
         public void ProcessVoiceInput( string voiceInput )
         {
             Command commandEnum = 0;
-            string commandValue = String.Empty;
+            string commandKey = String.Empty;
 
             if (voiceInput.StartsWith("OK Jarvis"))
             {
                 if (voiceInput.Contains("open"))
                 {
-                    voiceInput = voiceInput.Replace("OK Jarvis open ", "");
+                    commandKey = voiceInput.Replace("OK Jarvis open ", "");
                     commandEnum = Command.OPEN;
-                    commandValue = getCommandVal(voiceInput);
                 }
                 else if (voiceInput.Contains("log out"))
                 {
@@ -135,14 +144,12 @@ namespace JarvisEmulator
                 }
                 else if (voiceInput.Contains("close"))
                 {
-                    voiceInput = voiceInput.Replace("OK Jarvis close ", "");
-                    commandValue = getCommandValClose(voiceInput);
+                    commandKey = voiceInput.Replace("OK Jarvis close ", "");
                     commandEnum = Command.CLOSE;
                 }
                 else if (voiceInput.Contains("update"))
                 {
-                    voiceInput = voiceInput.Replace("OK Jarvis update ", "");
-                    commandValue = getCommandVal(voiceInput);
+                    commandKey = voiceInput.Replace("OK Jarvis update ", "");
                     commandEnum = Command.UPDATE;
                 }
                 else if (voiceInput.Contains("take my picture") || voiceInput.Contains("snap") ||
@@ -150,39 +157,13 @@ namespace JarvisEmulator
                 {
                     commandEnum = Command.TAKEPICTURE;
                 }
-            }
-
-            PublishSpeechData(commandEnum, commandValue);
-        }
-
-        public string getCommandVal( string commandKey )
-        {
-            if (activeUser != null && activeUser.CommandDictionary.ContainsKey(commandKey) )
-            {
-                return activeUser.CommandDictionary[commandKey];
-            }
-
-            return String.Empty;
-        }
-
-        public string getCommandValClose( string commandKey )
-        {
-            if (activeUser != null && activeUser.CommandDictionary.ContainsKey(commandKey) )
-            {
-                string commandValue = activeUser.CommandDictionary[commandKey];
-                if ( commandValue.Contains(".exe") )
+                else if ( voiceInput.Contains("weather") )
                 {
-                    int indexOfLastSlash = commandValue.LastIndexOf('\\') + 1;
-
-                    return commandValue.Substring(indexOfLastSlash, commandValue.Length - indexOfLastSlash - 4);
-                }
-                else
-                {
-                    return commandValue;
+                    commandEnum = Command.GET_WEATHER;
                 }
             }
 
-            return String.Empty;
+            PublishSpeechData(commandEnum, commandKey);
         }
 
         private void SpeechRecognized(object sender, SpeechRecognizedEventArgs e)
@@ -207,17 +188,18 @@ namespace JarvisEmulator
             return SubscriptionManager.Subscribe(commandObserver, observer);
         }
 
-        private void PublishSpeechData( Command command, string commandValue )
+        private void PublishSpeechData( Command command, string commandKey)
         {
             SpeechData packet = new SpeechData();
             packet.Command = command;
-            packet.CommandValue = commandValue;
+            packet.CommandKey = commandKey;
+            packet.ActiveUser = activeUser; 
 
             SubscriptionManager.Publish(commandObserver, packet);
         }
 
         // UpdateGrammar takes too long to run synchronously.
-        private void RunUpdateGrammarThread()
+        private void RunUpdateGrammarThread( bool unloadGrammar )
         {
             // Wait for the previous thread to stop if it is active.
             if ( null != grammarUpdateThread && grammarUpdateThread.IsAlive )
@@ -226,7 +208,8 @@ namespace JarvisEmulator
             }
 
             // Create new thread.
-            grammarUpdateThread = new Thread(UpdateGrammar);
+            ThreadStart threadInfo = delegate () { UpdateGrammar(unloadGrammar); };
+            grammarUpdateThread = new Thread(threadInfo);
 
             // Start the thread.
             grammarUpdateThread.Start();
@@ -239,17 +222,17 @@ namespace JarvisEmulator
             if ( activeUser != value.ActiveUser )
             {
                 activeUser = value.ActiveUser;
-                RunUpdateGrammarThread();
+                RunUpdateGrammarThread( null != activeUser );
             }
         }
 
         // When a user has updated the UI, refresh the recognizer with the commands
         // associated with the active user.
-        public void OnNext( UIData value )
+        public void OnNext( ConfigData value )
         {
             if ( value.SaveToProfile )
             {
-                RunUpdateGrammarThread();
+                RunUpdateGrammarThread((null != activeUser) && !value.PerformCleanup);
             }
         }
 

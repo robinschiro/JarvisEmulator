@@ -237,14 +237,21 @@ namespace JarvisEmulator
         /// String.Empty, if not recognized;
         /// Label of the corresponding image, otherwise
         /// </returns>
-        public Guid Recognize(Image<Gray, Byte> image)
+        public Guid Recognize(bool facesDetected, Image<Gray, Byte> image)
         {
             int index;
             float eigenDistance;
             Guid userGuid;
-            FindMostSimilarObject(image, out index, out eigenDistance, out userGuid);
 
-            userGuid = (_eigenDistanceThreshold <= 0 || eigenDistance < _eigenDistanceThreshold) ? userGuid : Guid.Empty;
+            if ( !facesDetected )
+            {
+                userGuid = Guid.Empty;
+            }
+            else
+            {
+                FindMostSimilarObject(image, out index, out eigenDistance, out userGuid);
+                userGuid = (_eigenDistanceThreshold <= 0 || eigenDistance < _eigenDistanceThreshold) ? userGuid : Guid.Empty;
+            }
 
             return PerformCachedRecognition(userGuid);
         }
