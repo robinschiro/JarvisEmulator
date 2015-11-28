@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Emgu.CV;
+using Emgu.CV.Structure;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -37,7 +39,7 @@ namespace JarvisEmulator
         #region Observer lists
 
         private List<IObserver<UserNotification>> userNotificationObservers = new List<IObserver<UserNotification>>();
-
+        private Image<Gray, byte> facePicture;
         #endregion
 
         #endregion
@@ -148,9 +150,15 @@ namespace JarvisEmulator
             }
         }
 
-        public void CommandTakePhoto()
+        public void CommandTakePhoto(string loc)
         {
+            int maxFileNum = 0;
 
+            // Store a picture of the face provided by the latest frame data packet.
+            if (null != facePicture)
+            {
+                facePicture.Save(Path.Combine(loc, (maxFileNum + 1) + ".jpg"));
+            }
         }
 
         public void CommandRSSUpdate( string nickname, string URL )
@@ -234,6 +242,11 @@ namespace JarvisEmulator
                 case Command.GET_WEATHER:
                 {
                     CommandRSSUpdate("", WEATHER_URL + zipCode);
+                    break;
+                }
+                case Command.TAKEPICTURE:
+                {
+                    CommandTakePhoto(commandValue);
                     break;
                 }
 
