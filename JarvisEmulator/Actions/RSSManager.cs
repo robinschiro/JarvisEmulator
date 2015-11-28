@@ -19,7 +19,12 @@ namespace JarvisEmulator
 
     public class RSSManager// : IObservable<RSSData>, IObserver<ActionData>
     {
-        string url;
+        // A url must be provided before calling the PublishRSSString function
+        private string url;
+        public string URL { get; set; }
+
+        private string nickname;
+        public string NickName { get; set; }
 
         // Give a function that calls back when the output is ready when creating the rss manager
         public RSSManager ( Func<RSSData, bool> actionManagerOutFunction )
@@ -31,11 +36,6 @@ namespace JarvisEmulator
 
         //private List<IObserver<RSSData>> RSSObservers = new List<IObserver<RSSData>>();
 
-        // A url must be provided before calling the PublishRSSString function
-        public void provideURL( string url )
-        {
-            this.url = url;
-        }   
 
         public void PublishRSSString()
         {

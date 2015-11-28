@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:JarvisEmulator"
         mc:Ignorable="d"
-        Title="Jarvis Emulator" Height="500" Width="500" Closing="Window_Closing">
+        Title="Jarvis Emulator" Height="550" Width="500" Closing="Window_Closing">
 
     <Window.Resources>
         <Style x:Key="BrowseButtonStyle" TargetType="Button">
@@ -273,7 +273,7 @@
 
                             <ListView Name="lvCommandDictionary"
                                       ItemsSource="{Binding SelectedUser.CommandDictionary}"
-                                      MaxHeight="150">
+                                      MaxHeight="125">
                                 <ListView.View>
                                     <GridView>
                                         <GridViewColumn Header="Command"

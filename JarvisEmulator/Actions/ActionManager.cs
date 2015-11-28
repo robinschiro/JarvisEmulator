@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -77,52 +78,55 @@ namespace JarvisEmulator
             }
         }
 
-        public void CommandOpenApplication( string app )
+        public void CommandOpenApplication( string nickname, string appLocation )
         {
             Process proc = new Process();
 
-            if ( app.Contains(".exe") )
+            if ( appLocation.Contains(".exe") )
             {
-                app = app.Remove(app.Length - 4);
+                appLocation = appLocation.Remove(appLocation.Length - 4);
             }
 
-            Process[] procname = Process.GetProcessesByName(app);
+            Process[] procname = Process.GetProcessesByName(appLocation);
             try
             {
                 if ( procname.Length == 0 )//it's not yet open
                 {
                     proc.EnableRaisingEvents = false;
-                    proc.StartInfo.FileName = app;
+                    proc.StartInfo.FileName = appLocation;
                     proc.Start();
                     // Notify the user of the action
-                    SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.OPENING_APPLICATION, username, app));
+                    SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.OPENING_APPLICATION, username, nickname));
                 }
                 else//it is open
                 {
-                    SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.ALREADY_OPENED, username, app));
+                    SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.ALREADY_OPENED, username, nickname));
                 }
 
             }
             catch ( Exception e )
             {
                 // Notify the user that no action was taken
-                SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.ALREADY_OPENED, username, app));
+                SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.ALREADY_OPENED, username, nickname));
             }
         }
 
-        public void CommandCloseApplication( string app )
+        public void CommandCloseApplication( string nickname, string appLocation )
         {
+            // The provided string will be the path to the executable file. Parse the executable name from the path.
+            string exeName = Path.GetFileNameWithoutExtension(appLocation);        
+
             Process[] procs = null;
             try
             {
-                procs = Process.GetProcessesByName(app);
+                procs = Process.GetProcessesByName(exeName);
 
                 Process close = procs[0];
 
                 if ( !close.HasExited )
                 {
                     // Notify the user of the action
-                    SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.CLOSING_APPLICATION, username, app));
+                    SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.CLOSING_APPLICATION, username, nickname));
 
                     close.Kill();
                 }
@@ -130,7 +134,7 @@ namespace JarvisEmulator
             catch ( Exception e )
             {
                 // Notify the user that no action was taken
-                SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.NO_APP_TO_CLOSE, username, app));
+                SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.NO_APP_TO_CLOSE, username, nickname));
             }
             finally
             {
@@ -149,7 +153,7 @@ namespace JarvisEmulator
 
         }
 
-        public void CommandRSSUpdate( string URL )
+        public void CommandRSSUpdate( string nickname, string URL )
         {
             // Wait for the RSS processing thread to stop if it is active.
             if (rssManagerThread.IsAlive)
@@ -161,7 +165,8 @@ namespace JarvisEmulator
             rssManagerThread = new Thread(rssManager.PublishRSSString);
 
             // Provide the URL and start the thread.
-            rssManager.provideURL(URL);
+            rssManager.NickName = nickname;
+            rssManager.URL = URL;
             rssManagerThread.Start();
         }
 
@@ -179,13 +184,18 @@ namespace JarvisEmulator
         //rssManagerThread.Start();
         // TODO: Check that the rssManagerThread has ended when trying to start it again
 
-        public void ProcessCommand( Command command, string commandValue )
+        public void ProcessCommand( Command command, string commandKey, User user )
         {
-            if ( null == commandValue )
+            string commandValue = String.Empty;
+            if ( null == commandKey )
             {
                 // Notify the user of the action
-                SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.ERROR, username, "Command object is null."));
+                SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.ERROR, username, "Command key is null."));
                 return;
+            }
+            else if ( user != null && user.CommandDictionary.ContainsKey(commandKey) )
+            {
+                commandValue = user.CommandDictionary[commandKey];
             }
 
             switch ( command )
@@ -198,19 +208,19 @@ namespace JarvisEmulator
 
                 case Command.UPDATE:
                 {
-                    CommandRSSUpdate(commandValue);
+                    CommandRSSUpdate(commandKey, commandValue);
                     break;
                 }
 
                 case Command.OPEN:
                 {
-                    CommandOpenApplication(commandValue);
+                    CommandOpenApplication(commandKey, commandValue);
                     break;
                 }
 
                 case Command.CLOSE:
                 {
-                    CommandCloseApplication(commandValue);
+                    CommandCloseApplication(commandKey, commandValue);
                     break;
                 }
 
@@ -223,7 +233,7 @@ namespace JarvisEmulator
 
                 case Command.GET_WEATHER:
                 {
-                    CommandRSSUpdate(WEATHER_URL + zipCode);
+                    CommandRSSUpdate("", WEATHER_URL + zipCode);
                     break;
                 }
 
@@ -243,7 +253,7 @@ namespace JarvisEmulator
 
         public void OnNext( SpeechData value )
         {
-            ProcessCommand(value.Command, value.CommandValue);
+            ProcessCommand(value.Command, value.CommandKey, value.ActiveUser);
         }
 
         public void OnNext( FrameData value )

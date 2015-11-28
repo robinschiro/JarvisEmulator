@@ -16,7 +16,8 @@ namespace JarvisEmulator
     public struct SpeechData
     {
         public Command Command;
-        public string CommandValue;
+        public string CommandKey;
+        public User ActiveUser;
     }
 
     public class SpeechRecognizer : IObservable<SpeechData>, IObserver<FrameData>, IObserver<ConfigData>
@@ -125,15 +126,14 @@ namespace JarvisEmulator
         public void ProcessVoiceInput( string voiceInput )
         {
             Command commandEnum = 0;
-            string commandValue = String.Empty;
+            string commandKey = String.Empty;
 
             if (voiceInput.StartsWith("OK Jarvis"))
             {
                 if (voiceInput.Contains("open"))
                 {
-                    voiceInput = voiceInput.Replace("OK Jarvis open ", "");
+                    commandKey = voiceInput.Replace("OK Jarvis open ", "");
                     commandEnum = Command.OPEN;
-                    commandValue = getCommandVal(voiceInput);
                 }
                 else if (voiceInput.Contains("log out"))
                 {
@@ -141,14 +141,12 @@ namespace JarvisEmulator
                 }
                 else if (voiceInput.Contains("close"))
                 {
-                    voiceInput = voiceInput.Replace("OK Jarvis close ", "");
-                    commandValue = getCommandValClose(voiceInput);
+                    commandKey = voiceInput.Replace("OK Jarvis close ", "");
                     commandEnum = Command.CLOSE;
                 }
                 else if (voiceInput.Contains("update"))
                 {
-                    voiceInput = voiceInput.Replace("OK Jarvis update ", "");
-                    commandValue = getCommandVal(voiceInput);
+                    commandKey = voiceInput.Replace("OK Jarvis update ", "");
                     commandEnum = Command.UPDATE;
                 }
                 else if (voiceInput.Contains("take my picture") || voiceInput.Contains("snap") ||
@@ -162,35 +160,7 @@ namespace JarvisEmulator
                 }
             }
 
-            PublishSpeechData(commandEnum, commandValue);
-        }
-
-        public string getCommandVal( string commandKey )
-        {
-            if (activeUser != null && activeUser.CommandDictionary.ContainsKey(commandKey) )
-            {
-                return activeUser.CommandDictionary[commandKey];
-            }
-
-            return String.Empty;
-        }
-
-        public string getCommandValClose( string commandKey )
-        {
-            if (activeUser != null && activeUser.CommandDictionary.ContainsKey(commandKey) )
-            {
-                string commandValue = activeUser.CommandDictionary[commandKey];
-                if ( commandValue.Contains(".exe") )
-                {
-                    return commandValue.Remove(commandValue.Length - 4);
-                }
-                else
-                {
-                    return commandValue;
-                }
-            }
-
-            return String.Empty;
+            PublishSpeechData(commandEnum, commandKey);
         }
 
         private void SpeechRecognized(object sender, SpeechRecognizedEventArgs e)
@@ -215,11 +185,12 @@ namespace JarvisEmulator
             return SubscriptionManager.Subscribe(commandObserver, observer);
         }
 
-        private void PublishSpeechData( Command command, string commandValue )
+        private void PublishSpeechData( Command command, string commandKey)
         {
             SpeechData packet = new SpeechData();
             packet.Command = command;
-            packet.CommandValue = commandValue;
+            packet.CommandKey = commandKey;
+            packet.ActiveUser = activeUser; 
 
             SubscriptionManager.Publish(commandObserver, packet);
         }
