@@ -21,10 +21,18 @@ namespace JarvisEmulator
     {
         // A url must be provided before calling the PublishRSSString function
         private string url;
-        public string URL { get; set; }
+        public string URL
+        {
+            get { return url; }
+            set { url = value; }
+        }
 
         private string nickname;
-        public string NickName { get; set; }
+        public string NickName
+        {
+            get { return nickname; }
+            set { nickname = value; }
+        }
 
         // Give a function that calls back when the output is ready when creating the rss manager
         public RSSManager ( Func<RSSData, bool> actionManagerOutFunction )
@@ -91,7 +99,7 @@ namespace JarvisEmulator
             }
             catch ( Exception ex )
             {
-                return "Failed to retrieve data from the website " + url;
+                return "Failed to retrieve data from " + nickname;
             }
             StringBuilder rssContent = new StringBuilder();
 

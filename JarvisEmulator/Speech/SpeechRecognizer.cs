@@ -33,7 +33,7 @@ namespace JarvisEmulator
         private string[] similar = new string[] { "ride Jarvis", "fly Jarvis", "hide Jarvis", "try Jarvis", "my harvest" };
 
         // Default phrases recognized by Jarvis
-        private string[] mainCommands = new string[] { "hello Jarvis", "hi Jarvis","howdy Jarvis", "OK Jarvis, how is the weather",
+        private string[] mainCommands = new string[] { "hello Jarvis", "hi Jarvis","howdy Jarvis", "OK Jarvis how is the weather",
                                                "OK Jarvis goodbye","OK Jarvis bye","OK Jarvis exit", "OK Jarvis see you later",
                                                "OK Jarvis log out", "OK Jarvis take my picture", "OK Jarvis snap", "OK Jarvis cheese", "OK Jarvis selfie"};
 
