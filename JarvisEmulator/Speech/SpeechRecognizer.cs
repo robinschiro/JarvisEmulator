@@ -118,12 +118,15 @@ namespace JarvisEmulator
             userChoices.Add(update);
             userChoices.Add(close);
 
-            // Build and add the user grammar to the recognizer.
+            if (commandKeys.Count <= 0)
+                return;
+
+            // Build and add the user grammar to the recognizer. 
             if ( 0 != appOpen.Length )
             {
-                userGrammar = new Grammar(new GrammarBuilder(userChoices));
-                speechRecognizer.LoadGrammar(userGrammar);
-            }
+            userGrammar = new Grammar(new GrammarBuilder(userChoices));
+            speechRecognizer.LoadGrammar(userGrammar);
+        }
         }
 
         public void ProcessVoiceInput( string voiceInput )

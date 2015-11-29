@@ -127,7 +127,7 @@ namespace JarvisEmulator
 
                 Process close = procs[0];
 
-                if ( !close.HasExited )
+                if (!close.HasExited)
                 {
                     // Notify the user of the action
                     SubscriptionManager.Publish(userNotificationObservers, new UserNotification(NOTIFICATION_TYPE.CLOSING_APPLICATION, username, nickname));
@@ -158,7 +158,7 @@ namespace JarvisEmulator
             if (null != facePicture)
             {
                 facePicture.Save(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyPictures), username + "_Selfie.bmp"));
-            }  
+            }
         }
 
         public void CommandRSSUpdate( string nickname, string URL )
