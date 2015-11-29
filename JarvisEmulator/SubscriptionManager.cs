@@ -53,6 +53,7 @@ namespace JarvisEmulator
             userInterface.Subscribe(speechConstructor);
             userInterface.Subscribe(configManager);
             userInterface.Subscribe(speechRecognizer);
+            userInterface.Subscribe(actionManager);
 
             // Create subscriptions to the ConfigurationManager.
             configManager.Subscribe(userInterface);

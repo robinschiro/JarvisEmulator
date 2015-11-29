@@ -131,10 +131,16 @@ namespace JarvisEmulator
             else
             {
                 // Using the Yahoo API.
-                //http://weather.yahooapis.com/forecastrss?p=84092
+                // http://weather.yahooapis.com/forecastrss?p=84092
 
                 XmlNamespaceManager nsmgr = new XmlNamespaceManager(rssXmlDoc.NameTable);
                 nsmgr.AddNamespace("yweather", "http://xml.weather.yahoo.com/ns/rss/1.0");
+
+                XmlNode titleNode = rssXmlDoc.DocumentElement.SelectSingleNode("/rss/channel/title", nsmgr);
+                string title = titleNode != null ? titleNode.InnerText : "";
+                title = title.Substring(title.LastIndexOf('-'));
+
+
                 XmlNode xNode = rssXmlDoc.DocumentElement.SelectSingleNode("/rss/channel/item/yweather:condition", nsmgr);
                 XmlAttributeCollection attrColl = rssXmlDoc.SelectSingleNode("/rss/channel/item/yweather:condition", nsmgr).Attributes;
                 
@@ -143,7 +149,7 @@ namespace JarvisEmulator
                 string conditions = attr1.InnerXml;
                 XmlAttribute attr2 = attrColl["temp"];
                 string temperature = attr2.InnerXml;
-                rssContent.Append("Today is " + conditions + " with a temperature of " + temperature + " degrees Fahrenheit ");
+                rssContent.Append("Today is " + conditions + " with a temperature of " + temperature + " degrees Fahrenheit in " + title);
             }
 
             return rssContent.ToString();

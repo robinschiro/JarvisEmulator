@@ -1,14 +1,101 @@
-// Application wide settings
--TrainingImagesFolder=C:\Dropbox\UCF\POOP\JarvisEmulator\JarvisEmulator\TrainingImages
--HaveJarvisGreetUsers=true
+JarvisEmulator.exe
 
-// Settings for each user.
+-TrainingImagesFolder=C:\Dropbox\UCF\POOP\JarvisEmulator\JarvisEmulator\bin\Debug\TrainingImages
+-ZipCode=32765
+-HaveJarvisGreetUsers=False
+-DrawDetectionRectangles=True
 -User=[
-    -Guid=63EF49A7-B6D4-43CD-8515-568332693F50
+
+    -Guid="9f1075a5-e7c0-48d7-8cb3-a875ff54186b"
+    -FirstName=Ted
+    -LastName=Kursevicius
+    -CommandPair=[
+
+        -CommandKey="my favorite website"
+        -CommandValue=www.google.com
+
+    -CommandPair=]
+    -CommandPair=[
+
+        -CommandKey="ask reddit"
+        -CommandValue=https://www.reddit.com/r/askreddit.rss
+
+    -CommandPair=]
+
+-User=]
+-User=[
+
+    -Guid="63ef49a7-b6d4-43cd-8515-568332693f50"
     -FirstName=Robin
     -LastName=Schiro
     -CommandPair=[
-        -CommandKey=reddit
-        -CommandValue=www.reddit.com/funny.rss
+
+        -CommandKey=news
+        -CommandValue=https://news.google.com/news?cf=all&hl=en&pz=1&ned=us&output=rss
+
     -CommandPair=]
+    -CommandPair=[
+
+        -CommandKey="video games"
+        -CommandValue=http://kotaku.com/rss
+
+    -CommandPair=]
+    -CommandPair=[
+
+        -CommandKey=word
+        -CommandValue="C:\Program Files\Microsoft Office 15\root\office15\WINWORD.EXE"
+
+    -CommandPair=]
+    -CommandPair=[
+
+        -CommandKey=excel
+        -CommandValue="C:\Program Files\Microsoft Office 15\root\office15\EXCEL.EXE"
+
+    -CommandPair=]
+    -CommandPair=[
+
+        -CommandKey="favorite website"
+        -CommandValue=www.reddit.com
+
+    -CommandPair=]
+    -CommandPair=[
+
+        -CommandKey="favorite application"
+        -CommandValue="C:\Program Files (x86)\Notepad++\notepad++.exe"
+
+    -CommandPair=]
+    -CommandPair=[
+
+        -CommandKey=jarvis
+        -CommandValue=C:\Dropbox\UCF\POOP\JarvisEmulator\JarvisEmulator\bin\Debug\JarvisEmulator.exe
+
+    -CommandPair=]
+    -CommandPair=[
+
+        -CommandKey=reddit
+        -CommandValue=https://www.reddit.com/r/askreddit.rss
+
+    -CommandPair=]
+
 -User=]
+-User=[
+
+    -Guid="fb2cef01-9a3c-4e8a-b13f-9b0a0a2c112f"
+    -FirstName=John
+    -LastName=Smith
+    -CommandPair=[
+
+        -CommandKey=yahoo
+        -CommandValue=www.yahoo.com
+
+    -CommandPair=]
+    -CommandPair=[
+
+        -CommandKey=test
+        -CommandValue=test
+
+    -CommandPair=]
+
+-User=]
+-SaveProfile=True
+-XML_Profile=False

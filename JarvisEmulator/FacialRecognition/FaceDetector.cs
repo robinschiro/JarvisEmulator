@@ -163,66 +163,70 @@ namespace JarvisEmulator
         // Retrieve frames from the capture device.
         private void CaptureFrame()
         {
-            if ( stopFrameProcessing )
+            try
             {
-                return;
-            }
-
-            Image<Bgr, byte> modifiedFrame;
-
-            // Verify that the frame grabber exists.
-            if ( null == grabber )
-            {
-                // Notify user that the capture device has not been initialized.
-                return;
-            }
-
-            // Retrieve the current frame.
-            lock ( currentFrame )
-            {
-                currentFrame = grabber.QueryFrame().Resize(320, 240, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
-                modifiedFrame = currentFrame.Copy();
-            }
-
-            lock ( lockBagObject )
-            {
-                foreach ( Rectangle rect in faceRectangleBag )
+                if ( stopFrameProcessing )
                 {
-                    // This action causes problems for an unknown reason sometimes.
-                    Image<Gray, byte> tempFacePic = null;
-                    try
+                    return;
+                }
+
+                Image<Bgr, byte> modifiedFrame;
+
+                // Verify that the frame grabber exists.
+                if ( null == grabber )
+                {
+                    // Notify user that the capture device has not been initialized.
+                    return;
+                }
+
+                // Retrieve the current frame.
+                lock ( currentFrame )
+                {
+                    currentFrame = grabber.QueryFrame().Resize(320, 240, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
+                    modifiedFrame = currentFrame.Copy();
+                }
+
+                lock ( lockBagObject )
+                {
+                    foreach ( Rectangle rect in faceRectangleBag )
                     {
-                        tempFacePic = modifiedFrame.Copy(rect).Convert<Gray, byte>().Resize(100, 100, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
-                    }
-                    catch ( Exception ex ) { }
-                    finally
-                    {
-                        if ( null != tempFacePic )
+                        // This action causes problems for an unknown reason sometimes.
+                        Image<Gray, byte> tempFacePic = null;
+                        try
                         {
-                            facePic = tempFacePic;
+                            tempFacePic = modifiedFrame.Copy(rect).Convert<Gray, byte>().Resize(100, 100, Emgu.CV.CvEnum.INTER.CV_INTER_CUBIC);
+                        }
+                        catch ( Exception ex ) { }
+                        finally
+                        {
+                            if ( null != tempFacePic )
+                            {
+                                facePic = tempFacePic;
+                            }
+                        }
+
+                        // Draw a rectangle around each detected face.
+                        if ( drawDetectionRectangles )
+                        {
+                            modifiedFrame.Draw(rect, new Bgr(System.Drawing.Color.Red), 2);
                         }
                     }
-
-                    // Draw a rectangle around each detected face.
-                    if ( drawDetectionRectangles )
-                    {
-                        modifiedFrame.Draw(rect, new Bgr(System.Drawing.Color.Red), 2);
-                    }
                 }
+
+                // Convert the frame to something viewable within WPF and freeze it so that it can be displayed.
+                BitmapSource frameBitmap = ToBitmapSource(modifiedFrame);
+                frameBitmap.Freeze();
+
+                // Create a frame data packet.
+                FrameData packet = new FrameData();
+                packet.Frame = frameBitmap;
+                packet.Face = facePic;
+                packet.ActiveUser = activeUser;
+
+                // Send the frame to all frame observers.
+                SubscriptionManager.Publish(frameObservers, packet);
             }
-
-            // Convert the frame to something viewable within WPF and freeze it so that it can be displayed.
-            BitmapSource frameBitmap = ToBitmapSource(modifiedFrame);
-            frameBitmap.Freeze();
-
-            // Create a frame data packet.
-            FrameData packet = new FrameData();
-            packet.Frame = frameBitmap;
-            packet.Face = facePic;
-            packet.ActiveUser = activeUser;
-
-            // Send the frame to all frame observers.
-            SubscriptionManager.Publish(frameObservers, packet);
+            catch ( Exception ex ) { }
 
 
         }

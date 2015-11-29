@@ -101,13 +101,6 @@ namespace JarvisEmulator
                     // Remove the user from the collection.
                     users.Remove(selectedUser);
 
-                    // Update the combobox.
-                    cboxUserSelection.SelectedIndex = 0;
-
-                    // Update the public property.
-                    object selectedItem = cboxUserSelection.SelectedItem;
-                    SelectedUser = (null != selectedItem) ? (selectedItem as User) : null;
-
                     // Delete user's picture folder.
                     string userFolder = Path.Combine(tboxTrainingImagesPath.Text, selectedUser.Guid.ToString());
                     if ( Directory.Exists(userFolder) )
@@ -117,6 +110,9 @@ namespace JarvisEmulator
 
                     // Save to profile.
                     PublishUIData(saveToProfile: true);
+
+                    // Update the combobox.
+                    cboxUserSelection.SelectedIndex = 0;
                 }
             }
         }
@@ -465,5 +461,40 @@ namespace JarvisEmulator
         }
 
         #endregion
+
+        private void tboxZipCode_TextChanged( object sender, TextChangedEventArgs e )
+        {
+            TextBox tbox = sender as TextBox;
+            string potentialZipCode = tbox.Text;
+            int zipCode = IsValidZipCode(potentialZipCode);
+            if ( 0 != zipCode  )
+            {
+                PublishUIData();
+            }
+        }
+
+        private int IsValidZipCode( string potentialZipCode )
+        {
+            if ( potentialZipCode.Length != 5 )
+            {
+                return 0;
+            }
+
+            try
+            {
+                int zipCode = Convert.ToInt32(potentialZipCode);
+
+                return zipCode;
+            }
+            catch ( Exception ex)
+            {
+                return 0;
+            }
+        }
+
+        private void chkGreetUsers_Click( object sender, RoutedEventArgs e )
+        {
+            PublishUIData();
+        }
     }
 }

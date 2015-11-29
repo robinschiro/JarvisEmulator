@@ -105,7 +105,7 @@ namespace JarvisEmulator
             string[] update = new string[commandKeys.Count];
             string[] close = new string[commandKeys.Count];
 
-            for (int i = 0; i < commandKeys.Count; i++)
+            for ( int i = 0; i < commandKeys.Count; i++ )
             {
 
                 appOpen[i] = "OK Jarvis open " + commandKeys[i];
@@ -118,9 +118,12 @@ namespace JarvisEmulator
             userChoices.Add(update);
             userChoices.Add(close);
 
-            // Build and add the user grammar to the recognizer. 
-            userGrammar = new Grammar(new GrammarBuilder(userChoices));
-            speechRecognizer.LoadGrammar(userGrammar);
+            // Build and add the user grammar to the recognizer.
+            if ( 0 != appOpen.Length )
+            {
+                userGrammar = new Grammar(new GrammarBuilder(userChoices));
+                speechRecognizer.LoadGrammar(userGrammar);
+            }
         }
 
         public void ProcessVoiceInput( string voiceInput )

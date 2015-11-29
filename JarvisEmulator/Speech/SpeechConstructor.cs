@@ -37,11 +37,11 @@ namespace JarvisEmulator
         // A list of different ways of notifying when opening an application.
         string[] openingAppVariants = { "Opening ", "I will open", "Here it is for you," };
         // A list of different ways of notifying when opening an application.
-        string[] openedAlreadyAppVariants = { "Already opened.", "The application you requested is already opened.", "I think I already did that." };
+        string[] openedAlreadyAppVariants = { "Already opened {0}", "The application, {0}, you requested is already opened.", "I think I already opened {0}" };
         // A list of different ways of notifying when closing an application.
         string[] closingAppVariants = { "Closing ", "I will close ", "No more of ", "Bye bye, " };
         // A list of different ways of notifying when closing an application.
-        string[] noAppToCloseVariants = { "I can't find that application anywhere.", "No application with that name opened.", "Can't do the impossible, that application is not opened." };
+        string[] noAppToCloseVariants = { "I can't find that application anywhere. ", "No application with that name opened. ", "Can't do the impossible, that application is not opened. " };
 
         // So it doesn't repeat twice the same random introduction
         public int lastIndex = 0;
@@ -85,7 +85,7 @@ namespace JarvisEmulator
         }
         private void NotOpeningApp(string application)
         {
-            VoiceResponse(getRandomStringFromList(openedAlreadyAppVariants) + application);
+            VoiceResponse(String.Format(getRandomStringFromList(openedAlreadyAppVariants), application));
         }
         private void NotClosingApp(string application)
         {
