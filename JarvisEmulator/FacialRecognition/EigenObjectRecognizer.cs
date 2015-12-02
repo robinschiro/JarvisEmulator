@@ -1,7 +1,16 @@
-/* This class was developed by Sergio Andrés Gutiérrez Rojas.
- * It publicly available on his page on CodeProject.com (http://www.codeproject.com/Articles/239849/Multiple-face-detection-and-recognition-in-real).
- *
- * */
+// ===============================
+// AUTHOR: Sergio Andrés Gutiérrez Rojas
+// PURPOSE: To perform eigen decomposition given a set of training images and test image
+//          in order to perform facial recognition.
+// NOTE: This publicly available on Sergio's page on CodeProject.com 
+//       (http://www.codeproject.com/Articles/239849/Multiple-face-detection-and-recognition-in-real).
+// ===============================
+// Change History:
+//
+// SR   03/27/2015  Created class
+// RS   11/12/2015  Stabilized facial recognition by using a queue to cache results
+//
+//==================================
 
 
 using System;

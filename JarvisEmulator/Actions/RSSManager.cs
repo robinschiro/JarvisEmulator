@@ -1,3 +1,13 @@
+// ===============================
+// AUTHOR: Julian Rojas
+// PURPOSE: To retrieve and parse information from a given rss feed.
+// ===============================
+// Change History:
+//
+// JR   10/20/2015  Created class
+//
+//==================================
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

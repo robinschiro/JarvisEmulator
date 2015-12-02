@@ -1,4 +1,14 @@
-﻿#define USE_MULTITHREADING
+﻿// ===============================
+// AUTHOR: Robin Schiro
+// PURPOSE: To use OpenCV to detect faces in a frame of a video feed.
+// ===============================
+// Change History:
+//
+// RS   11/5/2015  Created class
+//
+//==================================
+
+#define USE_MULTITHREADING
 
 using System;
 using System.Collections.Generic;

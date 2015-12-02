@@ -1,4 +1,14 @@
-﻿using System;
+﻿// ===============================
+// AUTHOR: Robin Schiro
+// PURPOSE: To provide a user interface for the users to configure their profiles
+// ===============================
+// Change History:
+//
+// RS   10/15/2015  Created class
+//
+//==================================
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows;

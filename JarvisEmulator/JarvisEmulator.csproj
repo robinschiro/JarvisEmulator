@@ -78,8 +78,6 @@
     <Compile Include="Speech\SpeechRecognizer.cs" />
     <Compile Include="Speech\UserNotification.cs" />
     <Compile Include="SubscriptionManager.cs" />
-    <Compile Include="tvToolbox\tvExtensions.cs" />
-    <Compile Include="tvToolbox\tvFetchResource.cs" />
     <Compile Include="tvToolbox\tvProfile.cs" />
     <Page Include="UserInterface\TwoEntryDialog.xaml">
       <SubType>Designer</SubType>

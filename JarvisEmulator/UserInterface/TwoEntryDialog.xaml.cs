@@ -1,4 +1,14 @@
-﻿using System;
+﻿// ===============================
+// AUTHOR: Robin Schiro
+// PURPOSE: To provide a window for a user to add/modify user names and commands.
+// ===============================
+// Change History:
+//
+// RS   10/25/2015  Created class
+//
+//==================================
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

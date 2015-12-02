@@ -1,3 +1,16 @@
+// ===============================
+// AUTHOR: George Schiro
+// PURPOSE: To provide a framework for easy configuration
+// NOTE: This class was created by the father of Robin Schiro many years ago. 
+//       Robin has used it in personal projects on several occasions and
+//       thus decided it would be useful in this project.
+// ===============================
+// Change History:
+//
+// GS   6/5/2001  Created class
+//
+//==================================
+
 using System;
 using System.Collections;
 using System.Diagnostics;

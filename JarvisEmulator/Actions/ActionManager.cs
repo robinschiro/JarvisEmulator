@@ -1,4 +1,14 @@
-﻿using Emgu.CV;
+﻿// ===============================
+// AUTHOR: Jimmy Lam
+// PURPOSE: To perform all operations requested by the user.
+// ===============================
+// Change History:
+//
+// JL   10/20/2015  Created class
+//
+//==================================
+
+using Emgu.CV;
 using Emgu.CV.Structure;
 using System;
 using System.Collections.Generic;
