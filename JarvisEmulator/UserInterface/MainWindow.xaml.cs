@@ -24,6 +24,7 @@ namespace JarvisEmulator
         private Timer frameTimer;
         private BitmapSource currentFrame;
         private Image<Gray, byte> facePicture;
+        private int zipCode;
         private ObservableCollection<User> users;
         public ObservableCollection<User> Users
         {
@@ -441,7 +442,7 @@ namespace JarvisEmulator
             packet.DrawDetectionRectangles = chkEnableTracking.IsChecked ?? false;
             packet.HaveJarvisGreetUser = chkGreetUsers.IsChecked ?? false;
             packet.PathToTrainingImages = tboxTrainingImagesPath.Text;
-            packet.ZipCode = Convert.ToInt32(tboxZipCode.Text);
+            packet.ZipCode = zipCode;
             packet.Users = users.ToList<User>();
             packet.SaveToProfile = saveToProfile;
             packet.RefreshTrainingImages = refreshTrainingImages;
@@ -466,7 +467,7 @@ namespace JarvisEmulator
         {
             TextBox tbox = sender as TextBox;
             string potentialZipCode = tbox.Text;
-            int zipCode = IsValidZipCode(potentialZipCode);
+            zipCode = IsValidZipCode(potentialZipCode);
             if ( 0 != zipCode  )
             {
                 PublishUIData();

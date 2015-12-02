@@ -1,4 +1,15 @@
-﻿using SpeechLib;
+﻿// ===============================
+// AUTHOR: Manuel Gonzalez
+// PURPOSE: To voice user notifications to the user.
+// ===============================
+// Change History:
+//
+// MG   10/20/2015  Created class
+//
+//==================================
+
+
+using SpeechLib;
 using System;
 using System.Collections.Generic;
 using System.Linq;

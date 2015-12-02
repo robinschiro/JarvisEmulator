@@ -19,6 +19,70 @@ namespace JarvisEmulator
 
     public class RSSManager// : IObservable<RSSData>, IObserver<ActionData>
     {
+        // Dictionary for state abbreviations.
+        private Dictionary<string, string> stateAbbreviations = new Dictionary<string, string>()
+        {
+            {"AL", "ALABAMA"},
+            {"AK", "ALASKA"},
+            {"AS", "AMERICAN SAMOA"},
+            {"AZ", "ARIZONA"},
+            {"AR", "ARKANSAS"},
+            {"CA", "CALIFORNIA"},
+            {"CO", "COLORADO"},
+            {"CT", "CONNECTICUT"},
+            {"DE", "DELAWARE"},
+            {"DC", "DISTRICT OF COLUMBIA"},
+            {"FM", "FEDERATED STATES OF MICRONESIA"},
+            {"FL", "FLORIDA"},
+            {"GA", "GEORGIA"},
+            {"GU", "GUAM GU"},
+            {"HI", "HAWAII"},
+            {"ID", "IDAHO"},
+            {"IL", "ILLINOIS"},
+            {"IN", "INDIANA"},
+            {"IA", "IOWA"},
+            {"KS", "KANSAS"},
+            {"KY", "KENTUCKY"},
+            {"LA", "LOUISIANA"},
+            {"ME", "MAINE"},
+            {"MH", "MARSHALL ISLANDS"},
+            {"MD", "MARYLAND"},
+            {"MA", "MASSACHUSETTS"},
+            {"MI", "MICHIGAN"},
+            {"MN", "MINNESOTA"},
+            {"MS", "MISSISSIPPI"},
+            {"MO", "MISSOURI"},
+            {"MT", "MONTANA"},
+            {"NE", "NEBRASKA"},
+            {"NV", "NEVADA"},
+            {"NH", "NEW HAMPSHIRE"},
+            {"NJ", "NEW JERSEY"},
+            {"NM", "NEW MEXICO"},
+            {"NY", "NEW YORK"},
+            {"NC", "NORTH CAROLINA"},
+            {"ND", "NORTH DAKOTA"},
+            {"MP", "NORTHERN MARIANA ISLANDS"},
+            {"OH", "OHIO"},
+            {"OK", "OKLAHOMA"},
+            {"OR", "OREGON"},
+            {"PW", "PALAU"},
+            {"PA", "PENNSYLVANIA"},
+            {"PR", "PUERTO RICO"},
+            {"RI", "RHODE ISLAND"},
+            {"SC", "SOUTH CAROLINA"},
+            {"SD", "SOUTH DAKOTA"},
+            {"TN", "TENNESSEE"},
+            {"TX", "TEXAS"},
+            {"UT", "UTAH"},
+            {"VT", "VERMONT"},
+            {"VI", "VIRGIN ISLANDS"},
+            {"VA", "VIRGINIA"},
+            {"WA", "WASHINGTON"},
+            {"WV", "WEST VIRGINIA"},
+            {"WI", "WISCONSIN"},
+            {"WY", "WYOMING"},
+        };
+
         // A url must be provided before calling the PublishRSSString function
         private string url;
         public string URL
@@ -124,7 +188,7 @@ namespace JarvisEmulator
 
                     rssContent.Append(x + " " + title + "   ");
                     x++;
-                    if ( count > 5 )
+                    if ( count > 0 )
                         break;
                 }
             }
@@ -137,8 +201,10 @@ namespace JarvisEmulator
                 nsmgr.AddNamespace("yweather", "http://xml.weather.yahoo.com/ns/rss/1.0");
 
                 XmlNode titleNode = rssXmlDoc.DocumentElement.SelectSingleNode("/rss/channel/title", nsmgr);
-                string title = titleNode != null ? titleNode.InnerText : "";
-                title = title.Substring(title.LastIndexOf('-'));
+                string cityAndState = titleNode != null ? titleNode.InnerText : "";
+                string city = cityAndState.Substring(cityAndState.LastIndexOf('-') + 2, cityAndState.LastIndexOf(',') - cityAndState.LastIndexOf('-') - 2);
+                string stateAbbrev = cityAndState.Substring(cityAndState.LastIndexOf(", ") + 2);
+                string state = stateAbbreviations[stateAbbrev];
 
 
                 XmlNode xNode = rssXmlDoc.DocumentElement.SelectSingleNode("/rss/channel/item/yweather:condition", nsmgr);
@@ -149,7 +215,7 @@ namespace JarvisEmulator
                 string conditions = attr1.InnerXml;
                 XmlAttribute attr2 = attrColl["temp"];
                 string temperature = attr2.InnerXml;
-                rssContent.Append("Today is " + conditions + " with a temperature of " + temperature + " degrees Fahrenheit in " + title);
+                rssContent.Append("Today is " + conditions + " with a temperature of " + temperature + " degrees Fahrenheit in " + city + ", " + state);
             }
 
             return rssContent.ToString();
