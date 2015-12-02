@@ -1,4 +1,14 @@
-﻿using System;
+﻿// ===============================
+// AUTHOR: Robin Schiro
+// PURPOSE: To store information about a specific user.
+// ===============================
+// Change History:
+//
+// RS   10/20/2015  Created class
+//
+//==================================
+
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;

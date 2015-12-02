@@ -1,3 +1,13 @@
+// ===============================
+// AUTHOR: Dr. WPF
+// PURPOSE: To provide a Dictionary class that updates field bound to its data.
+// ===============================
+// Change History:
+//
+// Dr. WPF   12/2/2013  Created class
+//
+//==================================
+
 /* Copyright (c) 2007, Dr. WPF
  * All rights reserved.
  *

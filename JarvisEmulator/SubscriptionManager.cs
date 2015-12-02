@@ -1,4 +1,14 @@
-﻿using System;
+﻿// ===============================
+// AUTHOR: Robin Schiro
+// PURPOSE: To set up the observer/observable relationships between all classes.
+// ===============================
+// Change History:
+//
+// RS   10/2/2015  Created class
+//
+//==================================
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

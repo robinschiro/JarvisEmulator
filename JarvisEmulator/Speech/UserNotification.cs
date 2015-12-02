@@ -1,4 +1,14 @@
-﻿namespace JarvisEmulator
+﻿// ===============================
+// AUTHOR: Manuel Gonzalez
+// PURPOSE: To provide a means by which user notifications can be packaged.
+// ===============================
+// Change History:
+//
+// MG   11/15/2015  Created class
+//
+//==================================
+
+namespace JarvisEmulator
 {
     public enum NOTIFICATION_TYPE
     {

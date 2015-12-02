@@ -1,4 +1,14 @@
-﻿using System;
+﻿// ===============================
+// AUTHOR: Jimmy Lam
+// PURPOSE: To listen for and detect phrases spoken by the user.
+// ===============================
+// Change History:
+//
+// JL   11/1/2015  Created class
+//
+//==================================
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;

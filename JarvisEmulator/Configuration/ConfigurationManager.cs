@@ -1,4 +1,15 @@
-﻿using System;
+﻿// ===============================
+// AUTHOR: Robin Schiro
+// PURPOSE: To save configuration information to a file and retrieve that information
+//          from a file upon initialization.
+// ===============================
+// Change History:
+//
+// RS   10/20/2015  Created class
+//
+//==================================
+
+using System;
 using System.Collections.Generic;
 using tvToolbox;
 using System.Linq;
