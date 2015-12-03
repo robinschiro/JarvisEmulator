@@ -198,7 +198,7 @@ namespace JarvisEmulator
 
                     rssContent.Append(x + " " + title + "   ");
                     x++;
-                    if ( count > 0 )
+                    if ( count > 4 )
                         break;
                 }
             }
